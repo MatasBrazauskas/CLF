@@ -5,15 +5,15 @@
 
 struct LineInfo {
     LineInfo() = delete;
-    LineInfo(const std::string& t_ipAddress, const std::string& t_identProtocol, const std::string& t_userId, const std::string& t_date, const std::string& t_clientRequest, int t_statusCode, int t_byteCount);
+    LineInfo(std::string_view t_ipAddress, std::string_view t_identProtocol, std::string_view t_userId, std::string_view t_date, std::string_view t_clientRequest, int t_statusCode, int t_byteCount);
 
-    std::string ipAddress;
-    std::string identProtocol;
-    std::string userId;
-    std::string date;
-    std::string clientRequest;
+    std::string_view ipAddress;
+    std::string_view identProtocol;
+    std::string_view userId;
+    std::string_view date;
+    std::string_view clientRequest;
     int statusCode;
     const int byteCount;
 };
 
-std::optional<LineInfo> parseLine(const std::string& line);
+std::optional<LineInfo> parseLine(std::string_view line);

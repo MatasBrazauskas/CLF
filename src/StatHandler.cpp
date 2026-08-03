@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <iostream>
 
-StatHandler::StatHandler(): errorCount{}, totalCount{} {}
+Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
-void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
-    totalCount++;
+StatHandler::StatHandler(): stats{} {}
 
+void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
     if (lineOpt.has_value()) {
         const auto line = lineOpt.value();
+
+        this->stats.totalRequestCount++;
+        this->stats.totalBytesCount += line.byteCount;
 
         if (const auto it = userInfo.find(line.userId); it != userInfo.end()) {
             auto& [requestCount, byteCount] = it->second;
@@ -26,13 +29,18 @@ void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
         } else {
             ipAddressInfo.insert({line.userId, {1, line.byteCount}});
         }
-    } else {
-        errorCount++;
+
+        const int arrayIndex = line.statusCode / 100;
+        if (arrayIndex >= 2 and arrayIndex <= 5) {
+            this->stats.statusCodeCount[arrayIndex - 2]++;
+        }
     }
 }
 
-float StatHandler::errorRate() const {
-    return this->errorCount / static_cast<float>(this->totalCount) * 100.0f;
+const Stats& StatHandler::retrieveStats(const std::size_t n) {
+    stats.mostActiveIpAddresses = ipAddressesWithMostRequest(n);
+    stats.mostActiveUsers = userWithMostRequest(n);
+    return stats;
 }
 
 std::vector<GroupInfo> StatHandler::userWithMostRequest(const std::size_t n) const {

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -e
+
+# ----------------------------------------------------------------------
+# 1. Build Release Binary with Debug Symbols (-g) & Frame Pointers
+# ----------------------------------------------------------------------
+echo "==> Building Release target with CMake..."
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer"
+cmake --build build --config Release
+
+TARGET_BIN="./build/clf"
+
+# ----------------------------------------------------------------------
+# 2. CPU Profiling with perf
+# ----------------------------------------------------------------------
+echo ""
+echo "=================================================="
+echo "          CPU PROFILE (LONGEST RUNNING)           "
+echo "=================================================="
+perf record -q -g -- "$TARGET_BIN"
+# Demangle C++ symbols and sort cleanly
+perf report --stdio --demangle -s symbol --percent-limit 1 -f
+
+# ----------------------------------------------------------------------
+# 3. Memory Profiling with heaptrack
+# ----------------------------------------------------------------------
+echo ""
+echo "=================================================="
+echo "          MEMORY PROFILE (HEAPTRACK)             "
+echo "=================================================="
+TMP_HEAPTRACK="/tmp/heaptrack_profile"
+
+# Remove any old runs first
+rm -f ${TMP_HEAPTRACK}*
+
+# Run heaptrack on the release binary
+heaptrack --raw-output-file "$TMP_HEAPTRACK" "$TARGET_BIN" > /dev/null 2>&1
+
+# Find the actual generated file (heaptrack appends PID)
+RESULT_FILE=$(ls ${TMP_HEAPTRACK}* | head -n 1)
+
+# Print summary (-n 0)
+heaptrack_print "$RESULT_FILE" -n 0
+
+echo ""
+echo "Top Peak Memory Offenders:"
+heaptrack_print "$RESULT_FILE" -p -n 3 -s 3 | grep -v "^#"
+
+# Cleanup temp files
+rm -f ${TMP_HEAPTRACK}* perf.data perf.data.old

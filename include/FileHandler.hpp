@@ -7,8 +7,8 @@ class FileHandler {
 public:
     FileHandler() = delete;
     explicit FileHandler(const std::string& filePath);
-    std::generator<std::string> getLine();
+    std::generator<std::string_view> getLine() const;
     ~FileHandler();
 private:
-    std::ifstream fileStream;
+    std::string_view mappedFile;
 };
