@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <future>
 
 Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
@@ -38,8 +39,9 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
 }
 
 const Stats& StatHandler::retrieveStats(const std::size_t n) {
-    stats.mostActiveIpAddresses = ipAddressesWithMostRequest(n);
     stats.mostActiveUsers = userWithMostRequest(n);
+    stats.mostActiveIpAddresses = ipAddressesWithMostRequest(n);
+
     return stats;
 }
 
