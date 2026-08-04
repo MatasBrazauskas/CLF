@@ -16,7 +16,7 @@ FileHandler::FileHandler(const std::string& filePath) {
         throw std::runtime_error{"Cannot open file"};
     }
 
-    struct stat sb;
+    struct stat sb{};
     if (fstat(fd, &sb) == -1) {
         close(fd);
         throw std::runtime_error("Error getting to end of file");
@@ -31,7 +31,7 @@ FileHandler::FileHandler(const std::string& filePath) {
     close(fd);
 
     if (memoryMappedFile == MAP_FAILED) {
-        throw std::runtime_error("mmap");
+        throw std::runtime_error("Failed to create memory map");
     }
 
     madvise(memoryMappedFile, sb.st_size, MADV_SEQUENTIAL);
