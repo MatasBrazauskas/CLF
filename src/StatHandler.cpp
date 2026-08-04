@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <future>
 
 StatHandler::StatHandler(): errorCount{}, totalCount{} {}
 
@@ -19,6 +20,7 @@ void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
             userInfo.insert({line.userId, {1, line.byteCount}});
         }
 
+
         if (const auto it = ipAddressInfo.find(line.ipAddress); it != ipAddressInfo.end()) {
             auto& [requestCount, byteCount] = it->second;
             requestCount++;
@@ -26,6 +28,7 @@ void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
         } else {
             ipAddressInfo.insert({line.userId, {1, line.byteCount}});
         }
+
     } else {
         errorCount++;
     }
