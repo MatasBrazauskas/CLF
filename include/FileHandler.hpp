@@ -6,7 +6,7 @@
 class FileHandler {
 public:
     FileHandler() = delete;
-    explicit FileHandler(const std::string& filePath);
+    explicit FileHandler(std::string_view filePath);
     std::generator<std::string> getLine();
     ~FileHandler();
 private:

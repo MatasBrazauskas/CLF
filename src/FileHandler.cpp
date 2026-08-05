@@ -2,7 +2,7 @@
 
 #include <string>
 
-FileHandler::FileHandler(const std::string& filePath): fileStream{std::ifstream{filePath}} {}
+FileHandler::FileHandler(std::string_view filePath): fileStream{std::ifstream{filePath.data()}} {}
 
 std::generator<std::string> FileHandler::getLine() {
 

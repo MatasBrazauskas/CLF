@@ -6,23 +6,43 @@
 #include <utility>
 #include <string>
 #include <unordered_map>
+#include <array>
 #include <vector>
 
-using ReqAndBytesCnt = std::pair<int, int>;
-using GroupInfo = std::tuple<std::string, int, int>;
+struct ReqAndBytesCnt {
+    std::size_t requestCount;
+    std::size_t bytesCount;
+
+    ReqAndBytesCnt() = delete;
+    ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt): requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
+};
+
+struct GroupInfo {
+    std::string name;
+    std::size_t requestCount;
+    std::size_t bytesCount;
+};
+
+struct Stats {
+    Stats();
+
+    std::size_t totalRequestCount;
+    std::size_t totalBytesCount;
+    std::array<std::size_t, 4> statusCodeCount;
+    std::vector<GroupInfo> mostActiveUsers;
+    std::vector<GroupInfo> mostActiveIpAddresses;
+    std::vector<GroupInfo> mostActiveHours;
+};
 
 class StatHandler {
 public:
     StatHandler();
     void analyzeLine(std::optional<LineInfo>);
-
-    float errorRate() const;
-    std::vector<GroupInfo> userWithMostRequest(std::size_t n) const;
-    std::vector<GroupInfo> ipAddressesWithMostRequest(std::size_t n) const;
+    const Stats& retrieveStats(std::size_t n);
 private:
-    std::size_t errorCount;
-    std::size_t totalCount;
+    Stats stats;
 
     std::unordered_map<std::string, ReqAndBytesCnt> userInfo;
     std::unordered_map<std::string, ReqAndBytesCnt> ipAddressInfo;
+    std::unordered_map<std::string, ReqAndBytesCnt> hourInfo;
 };
