@@ -1,8 +1,8 @@
 1. Time information
 
-time ./cmake-build-debug/clf -f data/100k -n 5
-time ./cmake-build-debug/clf -f data/1M -n 5
-time ./cmake-build-debug/clf -f data/10M -n 5
+hyperfine --warmup 3 ./cmake-build-debug/clf -f data/100k -n 5
+hyperfine --warmup 3 ./cmake-build-debug/clf -f data/1M -n 5
+hyperfine --warmup 3 ./cmake-build-debug/clf -f data/10M -n 5
 
 2. Memory information
 
