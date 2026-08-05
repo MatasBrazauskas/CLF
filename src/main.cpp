@@ -1,47 +1,60 @@
-#include <iostream>
+#include <print>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 
 #include <string>
 
+#include "InputHandler.hpp"
 #include "StatHandler.hpp"
 
 using namespace std::string_literals;
 
-constexpr auto filePath = "data/log1M";
-constexpr auto n = 5;
+int main(const int argc, char** argv) {
+    const auto inputsOpt = validateInputs(argc, argv);
+    if (not inputsOpt.has_value()) {
+        return -1;
+    }
 
-int main() {
+    const auto inputs = inputsOpt.value();
+
     StatHandler statHandler{};
-    FileHandler fileHandler{filePath};
+    FileHandler fileHandler{inputs.fileName};
 
     for(const std::string_view line : fileHandler.getLine()) {
         const auto lineInfo = parseLine(line);
         statHandler.analyzeLine(lineInfo);
     }
 
-    const auto stats = statHandler.retrieveStats(n);
+    const auto stats = statHandler.retrieveStats(inputs.n);
 
-    std::cout << "Total requests: " << stats.totalRequestCount << std::endl << std::endl;
-    std::cout << "Total bytes transferred: " << stats.totalBytesCount << std::endl << std::endl;
+    std::println("Total requests: {}.", stats.totalRequestCount);
 
-    std::cout << "Status code statistics:" << std::endl;
+    std::println();
+
+    std::println("Total bytes transferred: {}.", stats.totalBytesCount);
+
+    std::println();
+    std::println("Status code statistics:");
     for (const auto& [index, statusCodeCnt] : std::ranges::views::enumerate(stats.statusCodeCount)) {
-        std::cout << "Status " << index + 2 << "xx: " << statusCodeCnt << " responses" << std::endl;
+        std::println("{}. Status {}xx, {} responses", index + 1, index + 2, statusCodeCnt);
     }
 
-    std::cout << std::endl;
-
-    std::cout << "Users with most bytes transferred: " << std::endl;
-    for (const auto& user : stats.mostActiveUsers) {
-        std::cout << "Username: " << get<0>(user) << ", requests: " << get<1>(user) << ", bytes transferred: " << get<2>(user)  << "." << std::endl;
+    std::println();
+    std::println("Users with most bytes transferred:");
+    for (const auto& [index, user] : std::ranges::views::enumerate(stats.mostActiveUsers)) {
+        std::println("{}. Username: {}, requests: {}, bytes transferred: {}.", index + 1, user.name, user.requestCount, user.bytesCount);
     }
 
-    std::cout << std::endl;
+    std::println();
+    std::println("IP addresses with most bytes transferred:");
+    for (const auto& [index, ip]: std::ranges::views::enumerate(stats.mostActiveIpAddresses)) {
+        std::println("{}. IP address: {}, requests: {}, bytes transferred: {}.", index + 1, ip.name, ip.requestCount, ip.bytesCount);
+    }
 
-    std::cout << "IP addresses with most bytes transferred: " << std::endl;
-    for (const auto& ip: stats.mostActiveIpAddresses) {
-        std::cout << "IP address: " << get<0>(ip) << ", requests: " << get<1>(ip) << ", bytes transferred: " << get<2>(ip)  << "." << std::endl;
+    std::println();
+    std::println("\nMost packed hours:");
+    for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
+        std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
     }
 }

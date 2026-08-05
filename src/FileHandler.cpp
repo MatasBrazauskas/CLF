@@ -9,8 +9,8 @@
 
 #include "StatHandler.hpp"
 
-FileHandler::FileHandler(const std::string& filePath) {
-    const int fd = open(filePath.c_str(), O_RDONLY);
+FileHandler::FileHandler(const std::string_view filePath) {
+    const int fd = open(filePath.data(), O_RDONLY);
 
     if (fd == -1) {
         throw std::runtime_error{"Cannot open file"};
