@@ -5,13 +5,21 @@
 #include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash>& map, const std::size_t n);
 
 Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
-StatHandler::StatHandler(): stats{} {}
+StatHandler::StatHandler(const std::size_t t_reserveSize): stats{} {
+    /*userInfo.max_load_factor(0.7f);
+    ipAddressInfo.max_load_factor(0.7f);
+    hourInfo.max_load_factor(0.7f);*/
 
-void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
+    userInfo.reserve(t_reserveSize);
+    ipAddressInfo.reserve(t_reserveSize);
+    hourInfo.reserve(t_reserveSize);
+}
+
+void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
     if (lineOpt.has_value()) {
         const auto& line = lineOpt.value();
 
@@ -61,7 +69,7 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n) {
+std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash>& map, const std::size_t n) {
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
         return a.requestCount > b.requestCount;
     };

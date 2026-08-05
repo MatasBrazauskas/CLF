@@ -18,7 +18,7 @@ int main(const int argc, char** argv) {
 
     const auto inputs = inputsOpt.value();
 
-    StatHandler statHandler{};
+    StatHandler statHandler{static_cast<std::size_t>(inputs.reserveCount)};
     FileHandler fileHandler{inputs.fileName};
 
     for(const std::string_view line : fileHandler.getLine()) {
