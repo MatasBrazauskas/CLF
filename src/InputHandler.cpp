@@ -11,7 +11,8 @@ static char args_doc[] = "[ARG1...]";
 static argp_option options[] = {
     {"input", 'f', "FILE", 0, "Input file path", 0},
     {"number", 'n', "N", 0, "Number of requested top statistics information", 0},
-    {"reserve", 'r', "RESERVE", 0, "Reserve the hash map space", 0},
+    {"epsilon", 'e', "E", 0, "Epsilon value for the count min sketch", 0},
+    {"delta", 'd', "D", 0, "Delta value for the count min sketch", 0},
     {0, 0, 0, 0, 0, 0}
 };
 
@@ -29,9 +30,14 @@ static error_t parse_opt(int key, char *arg, argp_state *state) {
                 input->n = std::stoi(arg);
             }
             break;
-        case 'r':
+        case 'e':
             if (arg) {
-                input->reserveCount = std::stoi(arg);
+                input->epsilon = std::stof(arg);
+            }
+            break;
+        case 'd':
+            if (arg) {
+                input->delta = std::stof(arg);
             }
             break;
         case ARGP_KEY_END:
@@ -55,9 +61,7 @@ std::optional<Inputs> validateInputs(const int argc, char **argv) {
         return std::nullopt;
     }
 
-    if (inputs.reserveCount <= 0) {
-        inputs.reserveCount = 5000;
-    }
+    if (inputs.epsilon == 0.0f or inputs.epsilon == 0.0f) {}
 
     return inputs;
 }

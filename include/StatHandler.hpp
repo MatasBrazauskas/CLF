@@ -1,11 +1,10 @@
 #pragma once
 
 #include "LineParser.hpp"
+#include "CountMinSketch.hpp"
 
 #include <cstddef>
 #include <utility>
-#include <string>
-#include <unordered_map>
 #include <array>
 #include <vector>
 
@@ -24,7 +23,8 @@ struct GroupInfo {
 };
 
 struct Stats {
-    Stats();
+    Stats() = delete;
+    Stats(std::size_t);
 
     std::size_t totalRequestCount;
     std::size_t totalBytesCount;
@@ -36,13 +36,13 @@ struct Stats {
 
 class StatHandler {
 public:
-    StatHandler(std::size_t);
+    explicit StatHandler(std::size_t n, double t_epsilon, double t_delta);
     void analyzeLine(const std::optional<LineInfo> &);
     const Stats& retrieveStats(std::size_t n);
 private:
     Stats stats;
 
-    std::unordered_map<std::string_view, ReqAndBytesCnt> userInfo;
-    std::unordered_map<std::string_view, ReqAndBytesCnt> ipAddressInfo;
-    std::unordered_map<std::string_view, ReqAndBytesCnt> hourInfo;
+    CountMinSketch userInfo;
+    CountMinSketch ipAddressInfo;
+    CountMinSketch hourInfo;
 };

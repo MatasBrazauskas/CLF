@@ -7,7 +7,8 @@ struct Inputs {
     Inputs();
     std::string_view fileName;
     int n;
-    int reserveCount;
+    float epsilon;
+    float delta;
 };
 
 std::optional<Inputs> validateInputs(int argc, char **argv);
