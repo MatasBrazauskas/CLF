@@ -9,22 +9,6 @@
 #include <array>
 #include <vector>
 
-struct StringViewHash {
-    std::size_t operator()(const std::string_view& view) const {
-
-        std::size_t hash{FNVOffsetBasis};
-        for (const char c: view)
-        {
-            hash ^= c;
-            hash *= FNVPrime;
-        }
-        return hash;
-    }
-private:
-    const std::size_t FNVPrime = 0x01000193;
-    const std::size_t FNVOffsetBasis = 0x811C9DC5;
-};
-
 struct ReqAndBytesCnt {
     std::size_t requestCount;
     std::size_t bytesCount;
@@ -58,7 +42,7 @@ public:
 private:
     Stats stats;
 
-    std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash> userInfo;
-    std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash> ipAddressInfo;
-    std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash> hourInfo;
+    std::unordered_map<std::string_view, ReqAndBytesCnt> userInfo;
+    std::unordered_map<std::string_view, ReqAndBytesCnt> ipAddressInfo;
+    std::unordered_map<std::string_view, ReqAndBytesCnt> hourInfo;
 };
