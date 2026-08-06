@@ -5,23 +5,34 @@
 #include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash>& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(const std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n);
 
 Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
-StatHandler::StatHandler(const std::size_t t_reserveSize): stats{} {
-    /*userInfo.max_load_factor(0.7f);
-    ipAddressInfo.max_load_factor(0.7f);
-    hourInfo.max_load_factor(0.7f);*/
+StatHandler::StatHandler(const std::size_t t_reserveSize, const std::size_t t_numberOfHashmaps): stats{} {
+    hashMaps.reserve(t_numberOfHashmaps);
 
-    userInfo.reserve(t_reserveSize);
-    ipAddressInfo.reserve(t_reserveSize);
-    hourInfo.reserve(t_reserveSize);
+    for (int i{}; i < t_numberOfHashmaps; i++) {
+        hashMaps.emplace_back(
+            std::unordered_map<std::string_view, ReqAndBytesCnt>{},
+            std::unordered_map<std::string_view, ReqAndBytesCnt>{},
+            std::unordered_map<std::string_view, ReqAndBytesCnt>{}
+            );
+
+        hashMaps[i].userInfo.reserve(t_reserveSize);
+        hashMaps[i].ipAddressInfo.reserve(t_reserveSize);
+        hashMaps[i].hourInfo.reserve(t_reserveSize);
+
+        hashMaps[i].userInfo.max_load_factor(0.5f);
+        hashMaps[i].ipAddressInfo.max_load_factor(0.5f);
+        hashMaps[i].hourInfo.max_load_factor(0.5f);
+    }
 }
 
 void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
     if (lineOpt.has_value()) {
         const auto& line = lineOpt.value();
+        auto& [userInfo, ipAddressInfo, hourInfo] = hashMaps[index];
 
         this->stats.totalRequestCount++;
         this->stats.totalBytesCount += line.byteCount;
@@ -58,10 +69,33 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
         hourIt->second.requestCount++;
         hourIt->second.bytesCount += line.byteCount;
 
+        index = (index + 1) % hashMaps.size();
     }
 }
 
-const Stats& StatHandler::retrieveStats(const std::size_t n) {
+const Stats& StatHandler::retrieveStats(const std::size_t n, const std::size_t t_reserveSize) {
+    std::unordered_map<std::string_view, ReqAndBytesCnt> f_userInfo;
+    std::unordered_map<std::string_view, ReqAndBytesCnt> f_ipAddressInfo;
+    std::unordered_map<std::string_view, ReqAndBytesCnt> f_hourInfo;
+
+    f_userInfo.max_load_factor(0.5f);
+    f_ipAddressInfo.max_load_factor(0.5f);
+    f_hourInfo.max_load_factor(0.5f);
+
+    f_userInfo.reserve(t_reserveSize);
+    f_ipAddressInfo.reserve(t_reserveSize);
+    f_hourInfo.reserve(t_reserveSize);
+
+    for (const auto& hashMap: hashMaps) {
+        const auto& [userInfo, ipAddressInfo, hourInfo] = hashMap;
+
+        for (const auto& [key,value]:userInfo) {
+            const auto& userIt = userInfo.try_emplace(key, ReqAndBytesCnt{0, 0}).first;
+            userIt->second.requestCount++;
+            userIt->second.bytesCount += line.byteCount;
+        }
+    }
+
     stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
     stats.mostActiveUsers = mostRequestPerData(userInfo, n);
     stats.mostActiveHours = mostRequestPerData(hourInfo, n);
@@ -69,7 +103,7 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt, StringViewHash>& map, const std::size_t n) {
+std::vector<GroupInfo> mostRequestPerData(const std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n) {
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
         return a.requestCount > b.requestCount;
     };

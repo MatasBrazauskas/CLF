@@ -7,7 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB SOURCE_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
-add_executable(clf ${SOURCE_FILES})
+add_executable(clf ${SOURCE_FILES}
+        include/a5hash.h)
 add_compile_options(-O3 -g -pg -fno-omit-frame-pointer)
 
 target_include_directories(clf PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
