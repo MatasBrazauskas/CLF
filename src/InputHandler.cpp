@@ -55,7 +55,7 @@ std::optional<Inputs> validateInputs(const int argc, char **argv) {
         return std::nullopt;
     }
 
-    if (inputs.reserveCount == 0) {
+    if (inputs.reserveCount <= 0) {
         inputs.reserveCount = 5000;
     }
 
