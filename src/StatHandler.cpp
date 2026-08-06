@@ -90,15 +90,27 @@ const Stats& StatHandler::retrieveStats(const std::size_t n, const std::size_t t
         const auto& [userInfo, ipAddressInfo, hourInfo] = hashMap;
 
         for (const auto& [key,value]:userInfo) {
-            const auto& userIt = userInfo.try_emplace(key, ReqAndBytesCnt{0, 0}).first;
-            userIt->second.requestCount++;
-            userIt->second.bytesCount += line.byteCount;
+            const auto& userIt = f_userInfo.try_emplace(key, ReqAndBytesCnt{0, 0}).first;
+            userIt->second.requestCount += value.requestCount;
+            userIt->second.bytesCount +=value.bytesCount;
+        }
+
+        for (const auto& [key,value]: ipAddressInfo) {
+            const auto& ipAddressIt = f_ipAddressInfo.try_emplace(key, ReqAndBytesCnt{0, 0}).first;
+            ipAddressIt->second.requestCount += value.requestCount;
+            ipAddressIt->second.bytesCount +=value.bytesCount;
+        }
+
+        for (const auto& [key,value]: hourInfo) {
+            const auto& hourIt= f_hourInfo.try_emplace(key, ReqAndBytesCnt{0, 0}).first;
+            hourIt->second.requestCount += value.requestCount;
+            hourIt->second.bytesCount +=value.bytesCount;
         }
     }
 
-    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
-    stats.mostActiveUsers = mostRequestPerData(userInfo, n);
-    stats.mostActiveHours = mostRequestPerData(hourInfo, n);
+    stats.mostActiveIpAddresses = mostRequestPerData(f_ipAddressInfo, n);
+    stats.mostActiveUsers = mostRequestPerData(f_userInfo, n);
+    stats.mostActiveHours = mostRequestPerData(f_hourInfo, n);
 
     return stats;
 }

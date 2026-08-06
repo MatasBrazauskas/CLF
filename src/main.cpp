@@ -18,7 +18,7 @@ int main(const int argc, char** argv) {
 
     const auto inputs = inputsOpt.value();
 
-    StatHandler statHandler{static_cast<std::size_t>(inputs.reserveCount)};
+    StatHandler statHandler{static_cast<std::size_t>(inputs.reserveCount / inputs.maps), static_cast<std::size_t>(inputs.maps)};
     FileHandler fileHandler{inputs.fileName};
 
     for(const std::string_view line : fileHandler.getLine()) {
@@ -26,7 +26,7 @@ int main(const int argc, char** argv) {
         statHandler.analyzeLine(lineInfo);
     }
 
-    const auto stats = statHandler.retrieveStats(inputs.n);
+    const auto stats = statHandler.retrieveStats(inputs.n, inputs.reserveCount);
 
     std::println("Total requests: {}.", stats.totalRequestCount);
 

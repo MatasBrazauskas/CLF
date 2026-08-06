@@ -12,6 +12,7 @@ static argp_option options[] = {
     {"input", 'f', "FILE", 0, "Input file path", 0},
     {"number", 'n', "N", 0, "Number of requested top statistics information", 0},
     {"reserve", 'r', "RESERVE", 0, "Reserve the hash map space", 0},
+    {"maps", 'm', "MAPS", 0, "Amount of hash maps used as buckets", 0},
     {0, 0, 0, 0, 0, 0}
 };
 
@@ -32,6 +33,11 @@ static error_t parse_opt(int key, char *arg, argp_state *state) {
         case 'r':
             if (arg) {
                 input->reserveCount = std::stoi(arg);
+            }
+            break;
+        case 'm':
+            if (arg) {
+                input->maps = std::stoi(arg);
             }
             break;
         case ARGP_KEY_END:
