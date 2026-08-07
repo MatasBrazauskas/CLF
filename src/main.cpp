@@ -18,7 +18,7 @@ int main(const int argc, char** argv) {
 
     const auto inputs = inputsOpt.value();
 
-    StatHandler statHandler{inputs.n, inputs.epsilon, inputs.delta};
+    StatHandler statHandler{static_cast<std::size_t>(inputs.n), inputs.epsilon, inputs.delta};
     FileHandler fileHandler{inputs.fileName};
 
     for(const std::string_view line : fileHandler.getLine()) {

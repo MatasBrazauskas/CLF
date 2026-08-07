@@ -4,7 +4,14 @@
 #include <vector>
 #include <string_view>
 
+
 struct ReqAndBytesCnt;
+
+struct Temp {
+    std::size_t hash;
+    ReqAndBytesCnt& value;
+};
+
 using uint = unsigned int;
 
 class CountMinSketch {
@@ -13,8 +20,7 @@ public:
     CountMinSketch(double t_epsilon, double t_delta);
     ~CountMinSketch() = default;
 
-    [[nodiscard]] ReqAndBytesCnt increment(std::string_view, std::size_t);
-    //[[nodiscard]] ReqAndBytesCnt get(std::string_view) const;
+    [[nodiscard]] Temp increment(std::string_view, std::size_t);
 private:
     static constexpr std::size_t FNV_OFFSET = 14695981039346656037ULL;
     static constexpr std::size_t FNV_PRIME = 1099511628211ULL;
@@ -22,7 +28,7 @@ private:
     std::size_t width;
     std::size_t depth;
 
-    std::vector<std::vector<ReqAndBytesCnt>> counters;
+    std::vector<ReqAndBytesCnt> counters;
 
     static std::size_t fnv1a(std::string_view);
     static std::size_t mix(std::size_t);

@@ -22,8 +22,12 @@ struct GroupInfo {
     std::size_t bytesCount;
 };
 
+struct TempHash {
+    std::size_t hash;
+    GroupInfo groupInfo;
+};
+
 struct Stats {
-    Stats() = delete;
     Stats(std::size_t);
 
     std::size_t totalRequestCount;
@@ -45,4 +49,8 @@ private:
     CountMinSketch userInfo;
     CountMinSketch ipAddressInfo;
     CountMinSketch hourInfo;
+
+    std::vector<TempHash> topUsers;
+    std::vector<TempHash> topIpAddresses;
+    std::vector<TempHash> topHours;
 };
