@@ -43,6 +43,7 @@ public:
     explicit StatHandler(std::size_t n, double t_epsilon, double t_delta);
     void analyzeLine(const std::optional<LineInfo> &);
     const Stats& retrieveStats(std::size_t n);
+    void merge(const StatHandler& other);
 private:
     Stats stats;
 

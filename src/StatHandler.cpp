@@ -4,8 +4,10 @@
 #include <iostream>
 #include <future>
 #include <ranges>
+#include <unordered_set>
 
 static void updateTopN(std::vector<TempHash>& top, const std::string_view key, const std::size_t hash, const ReqAndBytesCnt& value);
+static std::vector<GroupInfo> buildFinalTopN(const std::vector<TempHash>& candidates, const CountMinSketch& cms, std::size_t n);
 
 Stats::Stats(const std::size_t n): totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}},
     mostActiveUsers{n, {"", 0, 0}},
@@ -57,7 +59,7 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
 }
 
 const Stats& StatHandler::retrieveStats(const std::size_t n) {
-    const auto cmp = [](const TempHash& a, const TempHash& b) {
+    /*const auto cmp = [](const TempHash& a, const TempHash& b) {
         return a.groupInfo.requestCount > b.groupInfo.requestCount;
     };
 
@@ -71,7 +73,11 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
 
     stats.mostActiveUsers = topUsers | std::views::transform(trs) | std::ranges::to<std::vector>();
     stats.mostActiveIpAddresses = topIpAddresses | std::views::transform(trs) | std::ranges::to<std::vector>();
-    stats.mostActiveHours = topHours | std::views::transform(trs) | std::ranges::to<std::vector>();
+    stats.mostActiveHours = topHours | std::views::transform(trs) | std::ranges::to<std::vector>();*/
+
+    stats.mostActiveUsers = buildFinalTopN(topUsers, userInfo, n);
+    stats.mostActiveIpAddresses = buildFinalTopN(topIpAddresses, ipAddressInfo, n);
+    stats.mostActiveHours = buildFinalTopN(topHours, hourInfo, n);
 
     return stats;
 }
@@ -96,4 +102,78 @@ static void updateTopN(std::vector<TempHash>& top, const std::string_view key, c
     }
 
     top[minIndex] = {hash, {key,value.requestCount,value.bytesCount}};
+}
+
+static std::vector<GroupInfo> buildFinalTopN(const std::vector<TempHash>& candidates, const CountMinSketch& cms, std::size_t n) {
+    std::unordered_set<std::string_view> seen;
+    seen.reserve(candidates.size());
+
+    std::vector<GroupInfo> result;
+    result.reserve(candidates.size());
+
+    for (const auto& candidate : candidates) {
+        const auto key = candidate.groupInfo.name;
+
+        if (key.empty()) {
+            continue;
+        }
+
+        if (!seen.insert(key).second) {
+            continue;
+        }
+
+        const auto value = cms.get(key);
+
+        result.push_back({
+            key,
+            value.requestCount,
+            value.bytesCount
+        });
+    }
+
+    std::ranges::sort(
+        result,
+        std::greater{},
+        &GroupInfo::requestCount
+    );
+
+    if (result.size() > n) {
+        result.resize(n);
+    }
+
+    return result;
+}
+
+void StatHandler::merge(const StatHandler& other)
+{
+    // Scalar statistics
+    stats.totalRequestCount += other.stats.totalRequestCount;
+    stats.totalBytesCount   += other.stats.totalBytesCount;
+
+    for (std::size_t i = 0; i < stats.statusCodeCount.size(); ++i) {
+        stats.statusCodeCount[i] += other.stats.statusCodeCount[i];
+    }
+
+    userInfo.merge(other.userInfo);
+    ipAddressInfo.merge(other.ipAddressInfo);
+    hourInfo.merge(other.hourInfo);
+
+    // Collect candidates.
+    topUsers.insert(
+        topUsers.end(),
+        other.topUsers.begin(),
+        other.topUsers.end()
+    );
+
+    topIpAddresses.insert(
+        topIpAddresses.end(),
+        other.topIpAddresses.begin(),
+        other.topIpAddresses.end()
+    );
+
+    topHours.insert(
+        topHours.end(),
+        other.topHours.begin(),
+        other.topHours.end()
+    );
 }

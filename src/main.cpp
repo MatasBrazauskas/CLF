@@ -1,16 +1,18 @@
-#include <print>
+#include <iostream>
+#include <ostream>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
-
-#include <string>
-
 #include "InputHandler.hpp"
 #include "StatHandler.hpp"
 
-using namespace std::string_literals;
+#include <string>
+#include <print>
+#include <thread>
 
 int main(const int argc, char** argv) {
+    const uint threadCount = std::thread::hardware_concurrency();
+
     const auto inputsOpt = validateInputs(argc, argv);
     if (not inputsOpt.has_value()) {
         return -1;
@@ -18,15 +20,43 @@ int main(const int argc, char** argv) {
 
     const auto inputs = inputsOpt.value();
 
-    StatHandler statHandler{static_cast<std::size_t>(inputs.n), inputs.epsilon, inputs.delta};
-    FileHandler fileHandler{inputs.fileName};
+    std::vector<StatHandler> statHandlers;
+    statHandlers.reserve(threadCount);
 
-    for(const std::string_view line : fileHandler.getLine()) {
-        const auto lineInfo = parseLine(line);
-        statHandler.analyzeLine(lineInfo);
+    for (std::size_t i = 0; i < threadCount; ++i) {
+        statHandlers.emplace_back(inputs.n * 4, inputs.epsilon, inputs.delta);
     }
 
-    const auto stats = statHandler.retrieveStats(inputs.n);
+    FileHandler fileHandler{inputs.fileName, threadCount};
+
+
+    const auto fn = [&fileHandler](StatHandler& stats, const long index) {
+        for(const std::string_view line : fileHandler.getLine(index)) {
+            const auto lineInfo = parseLine(line);
+            stats.analyzeLine(lineInfo);
+        }
+    };
+
+    std::vector<std::thread> threads{threadCount};
+
+    for (auto [index, thread] : std::views::enumerate(threads)) {
+
+        auto& stats = statHandlers[index];
+        thread = std::thread(fn, std::ref(stats), index);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    /*StatHandler finalHandler{5 * 4,0.01,0.1};
+
+    for (const auto& handler : statHandlers) {
+        finalHandler.merge(handler);
+    }
+
+    const Stats& stats = finalHandler.retrieveStats(5);
+
 
     std::println("Total requests: {}.", stats.totalRequestCount);
 
@@ -56,5 +86,5 @@ int main(const int argc, char** argv) {
     std::println("\nMost packed hours:");
     for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
         std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
-    }
+    }*/
 }

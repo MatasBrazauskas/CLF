@@ -37,6 +37,39 @@ Temp CountMinSketch::increment(const std::string_view t_key, const std::size_t t
     return {h1, result};
 }
 
+ReqAndBytesCnt CountMinSketch::get(std::string_view key) const
+{
+    const std::size_t h1 = fnv1a(key);
+    const std::size_t h2 = mix(h1);
+
+    ReqAndBytesCnt result{
+        std::numeric_limits<std::size_t>::max(),
+        std::numeric_limits<std::size_t>::max()
+    };
+
+    for (std::size_t row = 0; row < depth; ++row) {
+        const std::size_t index =
+            (h1 + row * h2) % width + row * width;
+
+        result.requestCount =
+            std::min(result.requestCount,
+                     counters[index].requestCount);
+
+        result.bytesCount =
+            std::min(result.bytesCount,
+                     counters[index].bytesCount);
+    }
+
+    return result;
+}
+
+void CountMinSketch::merge(const CountMinSketch& other)
+{
+    for (std::size_t i = 0; i < counters.size(); ++i) {
+        counters[i].requestCount += other.counters[i].requestCount;
+        counters[i].bytesCount += other.counters[i].bytesCount;
+    }
+}
 std::size_t CountMinSketch::fnv1a(const std::string_view t_value) {
     std::uint64_t hash = FNV_OFFSET;
 
