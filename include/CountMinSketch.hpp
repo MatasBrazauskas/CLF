@@ -1,15 +1,21 @@
 #pragma once
 
-
+#include <cstddef>
 #include <vector>
 #include <string_view>
 
+struct ReqAndBytesCnt {
+    std::size_t requestCount;
+    std::size_t bytesCount;
 
-struct ReqAndBytesCnt;
+    ReqAndBytesCnt() = delete;
+    ReqAndBytesCnt(std::size_t t_reqCnt, std::size_t t_bytesCnt)
+        : requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
+};
 
 struct Temp {
     std::size_t hash;
-    ReqAndBytesCnt& value;
+    ReqAndBytesCnt value;
 };
 
 using uint = unsigned int;

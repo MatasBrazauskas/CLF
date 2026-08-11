@@ -8,14 +8,6 @@
 #include <array>
 #include <vector>
 
-struct ReqAndBytesCnt {
-    std::size_t requestCount;
-    std::size_t bytesCount;
-
-    ReqAndBytesCnt() = delete;
-    ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt): requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
-};
-
 struct GroupInfo {
     std::string_view name;
     std::size_t requestCount;
