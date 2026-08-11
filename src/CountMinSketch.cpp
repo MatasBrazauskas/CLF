@@ -10,7 +10,6 @@
 #include <string_view>
 #include <vector>
 
-
 CountMinSketch::CountMinSketch(const double t_epsilon, const double t_delta)
         : width(std::ceil(std::exp(1.0) / t_epsilon)),
           depth(std::ceil(std::log(1.0 / t_delta))),
@@ -37,27 +36,18 @@ Temp CountMinSketch::increment(const std::string_view t_key, const std::size_t t
     return {h1, result};
 }
 
-ReqAndBytesCnt CountMinSketch::get(std::string_view key) const
+ReqAndBytesCnt CountMinSketch::get(const std::string_view t_key) const
 {
-    const std::size_t h1 = fnv1a(key);
+    const std::size_t h1 = fnv1a(t_key);
     const std::size_t h2 = mix(h1);
 
-    ReqAndBytesCnt result{
-        std::numeric_limits<std::size_t>::max(),
-        std::numeric_limits<std::size_t>::max()
-    };
+    ReqAndBytesCnt result{std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max()};
 
-    for (std::size_t row = 0; row < depth; ++row) {
-        const std::size_t index =
-            (h1 + row * h2) % width + row * width;
+    for (int row{}; row < depth; ++row) {
+        const std::size_t index = ((h1 + row * h2) & (width - 1)) + row * width;
 
-        result.requestCount =
-            std::min(result.requestCount,
-                     counters[index].requestCount);
-
-        result.bytesCount =
-            std::min(result.bytesCount,
-                     counters[index].bytesCount);
+        result.requestCount = std::min(result.requestCount, counters[index].requestCount);
+        result.bytesCount = std::min(result.bytesCount, counters[index].bytesCount);
     }
 
     return result;

@@ -12,8 +12,6 @@ struct Temp {
     ReqAndBytesCnt& value;
 };
 
-using uint = unsigned int;
-
 class CountMinSketch {
 public:
     CountMinSketch() = delete;
@@ -21,7 +19,7 @@ public:
     ~CountMinSketch() = default;
 
     [[nodiscard]] Temp increment(std::string_view, std::size_t);
-    ReqAndBytesCnt get(std::string_view key) const;
+    [[nodiscard]] ReqAndBytesCnt get(std::string_view key) const;
     void merge(const CountMinSketch& other);
 private:
     static constexpr std::size_t FNV_OFFSET = 14695981039346656037ULL;

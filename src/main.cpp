@@ -2,7 +2,6 @@
 #include <ostream>
 #include <print>
 #include <thread>
-#include <sys/stat.h>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
