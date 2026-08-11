@@ -1,14 +1,14 @@
 #include <iostream>
 #include <ostream>
+#include <print>
+#include <thread>
+#include <sys/stat.h>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 #include "InputHandler.hpp"
 #include "StatHandler.hpp"
 
-#include <string>
-#include <print>
-#include <thread>
 
 int main(const int argc, char** argv) {
     const uint threadCount = std::thread::hardware_concurrency();
@@ -37,19 +37,18 @@ int main(const int argc, char** argv) {
         }
     };
 
-    std::vector<std::thread> threads{threadCount};
+    std::vector<std::thread> threads;
+    threads.reserve(threadCount);
 
-    for (auto [index, thread] : std::views::enumerate(threads)) {
-
-        auto& stats = statHandlers[index];
-        thread = std::thread(fn, std::ref(stats), index);
+    for (auto index : std::views::iota(0u, threadCount)) {
+        threads.emplace_back(fn, std::ref(statHandlers[index]), index);
     }
 
     for (auto& thread : threads) {
         thread.join();
     }
 
-    /*StatHandler finalHandler{5 * 4,0.01,0.1};
+    StatHandler finalHandler{5 * 4,0.01,0.1};
 
     for (const auto& handler : statHandlers) {
         finalHandler.merge(handler);
@@ -86,5 +85,5 @@ int main(const int argc, char** argv) {
     std::println("\nMost packed hours:");
     for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
         std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
-    }*/
+    }
 }
