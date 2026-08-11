@@ -3,13 +3,8 @@
 #include <algorithm>
 #include <ranges>
 
-enum class TopNMetric {
-    Requests,
-    Bytes,
-};
-
-static void updateTopN(std::vector<TempHash>& top, std::string_view key, std::size_t hash, const ReqAndBytesCnt& value, TopNMetric metric);
-static bool ranksAbove(const GroupInfo& a, const GroupInfo& b, TopNMetric metric);
+static void updateTopN(std::vector<TempHash>& top, std::string_view key, std::size_t hash, const ReqAndBytesCnt& value);
+static bool ranksAbove(const GroupInfo& a, const GroupInfo& b);
 
 Stats::Stats(const std::size_t n): totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}},
     mostActiveUsers{n, {"", 0, 0}},
@@ -35,10 +30,10 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
         }
 
         const auto [userHash, userCms] = userInfo.increment(line.userId, line.byteCount);
-        updateTopN(topUsers, line.userId, userHash, userCms, TopNMetric::Bytes);
+        updateTopN(topUsers, line.userId, userHash, userCms);
 
         const auto [ipAddressHash, ipAddressCms] = ipAddressInfo.increment(line.ipAddress, line.byteCount);
-        updateTopN(topIpAddresses, line.ipAddress, ipAddressHash, ipAddressCms, TopNMetric::Bytes);
+        updateTopN(topIpAddresses, line.ipAddress, ipAddressHash, ipAddressCms);
 
         const std::size_t firstColon = line.date.find(':');
         if (firstColon == std::string::npos) {
@@ -56,7 +51,7 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
         }
 
         const auto [hourHash, hourCms] = hourInfo.increment(hourDate, line.byteCount);
-        updateTopN(topHours, hourDate, hourHash, hourCms, TopNMetric::Requests);
+        updateTopN(topHours, hourDate, hourHash, hourCms);
     }
 }
 
@@ -66,11 +61,11 @@ const Stats& StatHandler::retrieveStats(const std::size_t) {
     };
 
     const auto bytesCmp = [](const TempHash& a, const TempHash& b) {
-        return ranksAbove(a.groupInfo, b.groupInfo, TopNMetric::Bytes);
+        return ranksAbove(a.groupInfo, b.groupInfo);
     };
 
     const auto requestsCmp = [](const TempHash& a, const TempHash& b) {
-        return ranksAbove(a.groupInfo, b.groupInfo, TopNMetric::Requests);
+        return ranksAbove(a.groupInfo, b.groupInfo);
     };
 
     std::ranges::sort(topUsers, bytesCmp);
@@ -84,7 +79,7 @@ const Stats& StatHandler::retrieveStats(const std::size_t) {
     return stats;
 }
 
-static void updateTopN(std::vector<TempHash>& top, const std::string_view key, const std::size_t hash, const ReqAndBytesCnt& value, const TopNMetric metric) {
+static void updateTopN(std::vector<TempHash>& top, const std::string_view key, const std::size_t hash, const ReqAndBytesCnt& value) {
     const GroupInfo candidate{key, value.requestCount, value.bytesCount};
     std::size_t minIndex{};
 
@@ -94,36 +89,22 @@ static void updateTopN(std::vector<TempHash>& top, const std::string_view key, c
             return;
         }
 
-        if (ranksAbove(top[minIndex].groupInfo, top[i].groupInfo, metric)) {
+        if (ranksAbove(top[minIndex].groupInfo, top[i].groupInfo)) {
             minIndex = i;
         }
     }
 
-    if (not ranksAbove(candidate, top[minIndex].groupInfo, metric)) {
+    if (not ranksAbove(candidate, top[minIndex].groupInfo)) {
         return;
     }
 
     top[minIndex] = {hash, candidate};
 }
 
-static bool ranksAbove(const GroupInfo& a, const GroupInfo& b, const TopNMetric metric) {
-    if (metric == TopNMetric::Bytes) {
-        if (a.bytesCount != b.bytesCount) {
-            return a.bytesCount > b.bytesCount;
-        }
-
-        if (a.requestCount != b.requestCount) {
-            return a.requestCount > b.requestCount;
-        }
-    } else {
-        if (a.requestCount != b.requestCount) {
-            return a.requestCount > b.requestCount;
-        }
-
-        if (a.bytesCount != b.bytesCount) {
-            return a.bytesCount > b.bytesCount;
-        }
+static bool ranksAbove(const GroupInfo& a, const GroupInfo& b) {
+    if (a.bytesCount != b.bytesCount) {
+        return a.bytesCount > b.bytesCount;
     }
 
-    return a.name < b.name;
+    return a.requestCount > b.requestCount;
 }

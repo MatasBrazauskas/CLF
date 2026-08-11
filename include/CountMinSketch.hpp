@@ -18,8 +18,6 @@ struct Temp {
     ReqAndBytesCnt value;
 };
 
-using uint = unsigned int;
-
 class CountMinSketch {
 public:
     CountMinSketch() = delete;
