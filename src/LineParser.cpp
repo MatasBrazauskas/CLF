@@ -31,12 +31,16 @@ std::optional<LineInfo> parseLine(const std::string& line) {
         const std::size_t statusCodeEndIndex = line.find(' ', statusCodeStartIndex);
         const std::string statusCodeStr = line.substr(statusCodeStartIndex, statusCodeEndIndex - statusCodeStartIndex);
         int statusCode{};
-        std::from_chars(statusCodeStr.data(),statusCodeStr.data() + statusCodeStr.size(), statusCode);
+        if (std::from_chars(statusCodeStr.data(),statusCodeStr.data() + statusCodeStr.size(), statusCode).ec != std::errc()) {
+            return std::nullopt;
+        }
 
         const std::size_t byteCountStartIndex = statusCodeEndIndex + 1;
         const std::string byteCountStr = line.substr(byteCountStartIndex);
         int byteCount{};
-        std::from_chars(byteCountStr.data(), byteCountStr.data() + byteCountStr.size(), byteCount);
+        if (std::from_chars(byteCountStr.data(), byteCountStr.data() + byteCountStr.size(), byteCount).ec != std::errc()) {
+            return std::nullopt;
+        }
 
         return LineInfo{ipAddress, identProtocol, userId, date, clientRequest, statusCode, byteCount};
     } catch (std::exception& _) {
