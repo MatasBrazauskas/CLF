@@ -1,16 +1,19 @@
+#include <algorithm>
+#include <functional>
 #include <iostream>
 #include <ostream>
 #include <print>
+#include <ranges>
 #include <thread>
+#include <vector>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 #include "InputHandler.hpp"
 #include "StatHandler.hpp"
 
-
 int main(const int argc, char** argv) {
-    const uint threadCount = std::thread::hardware_concurrency();
+    const uint threadCount = std::max(1u, std::thread::hardware_concurrency());
 
     const auto inputsOpt = validateInputs(argc, argv);
     if (not inputsOpt.has_value()) {
@@ -18,12 +21,14 @@ int main(const int argc, char** argv) {
     }
 
     const auto inputs = inputsOpt.value();
+    const auto topCount = static_cast<std::size_t>(inputs.n);
+    const auto candidateCount = topCount * 4;
 
     std::vector<StatHandler> statHandlers;
     statHandlers.reserve(threadCount);
 
     for (std::size_t i = 0; i < threadCount; ++i) {
-        statHandlers.emplace_back(inputs.n * 4, inputs.epsilon, inputs.delta);
+        statHandlers.emplace_back(candidateCount, inputs.epsilon, inputs.delta);
     }
 
     FileHandler fileHandler{inputs.fileName, threadCount};
@@ -47,14 +52,11 @@ int main(const int argc, char** argv) {
         thread.join();
     }
 
-    StatHandler finalHandler{5 * 4,0.01,0.1};
-
-    for (const auto& handler : statHandlers) {
-        finalHandler.merge(handler);
+    for (auto& handler : statHandlers | std::views::drop(1)) {
+        statHandlers[0].merge(handler);
     }
 
-    const Stats& stats = finalHandler.retrieveStats(5);
-
+    const Stats& stats = statHandlers[0].retrieveStats(topCount);
 
     std::println("Total requests: {}.", stats.totalRequestCount);
 

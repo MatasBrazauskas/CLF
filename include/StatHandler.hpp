@@ -46,6 +46,7 @@ public:
     void merge(const StatHandler& other);
 private:
     Stats stats;
+    std::size_t topLimit;
 
     CountMinSketch userInfo;
     CountMinSketch ipAddressInfo;

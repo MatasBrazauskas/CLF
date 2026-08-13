@@ -3,34 +3,36 @@
 #include "StatHandler.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
 
 CountMinSketch::CountMinSketch(const double t_epsilon, const double t_delta)
-        : width(std::ceil(std::exp(1.0) / t_epsilon)),
-          depth(std::ceil(std::log(1.0 / t_delta))),
-          counters(width * depth, {0,0}) {}
+    : width{std::bit_ceil(static_cast<std::size_t>(std::ceil(std::exp(1.0) / t_epsilon)))},
+    depth{static_cast<std::size_t>(std::ceil(std::log(1.0 / t_delta)))},
+    counters(width * depth, {0, 0}) {}
 
 Temp CountMinSketch::increment(const std::string_view t_key, const std::size_t t_bytesCnt)
 {
     const std::size_t h1 = fnv1a(t_key);
     const std::size_t h2 = mix(h1);
 
-    ReqAndBytesCnt result{std::numeric_limits<std::size_t>::max(),std::numeric_limits<std::size_t>::max()};
+    ReqAndBytesCnt result{std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max()};
 
-    for (int row{}; row < depth; ++row) {
-        const std::size_t index = (h1 + row * h2) & (width - 1) + row * width;
+    for (std::size_t row{}; row < depth; ++row) {
+        const std::size_t index = ((h1 + row * h2) & (width - 1)) + row * width;
+        auto& cell = counters[index];
 
-        ++counters[index].requestCount;
-        counters[index].bytesCount += t_bytesCnt;
+        ++cell.requestCount;
+        cell.bytesCount += t_bytesCnt;
 
-        if (result.requestCount > counters[index].requestCount) {
-            result = counters[index];
-        }
+        result.requestCount = std::min(result.requestCount, cell.requestCount);
+        result.bytesCount = std::min(result.bytesCount, cell.bytesCount);
     }
 
     return {h1, result};
@@ -43,7 +45,7 @@ ReqAndBytesCnt CountMinSketch::get(const std::string_view t_key) const
 
     ReqAndBytesCnt result{std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max()};
 
-    for (int row{}; row < depth; ++row) {
+    for (std::size_t row{}; row < depth; ++row) {
         const std::size_t index = ((h1 + row * h2) & (width - 1)) + row * width;
 
         result.requestCount = std::min(result.requestCount, counters[index].requestCount);
@@ -55,11 +57,16 @@ ReqAndBytesCnt CountMinSketch::get(const std::string_view t_key) const
 
 void CountMinSketch::merge(const CountMinSketch& other)
 {
-    for (std::size_t i = 0; i < counters.size(); ++i) {
+    if (width != other.width or depth != other.depth or counters.size() != other.counters.size()) {
+        throw std::invalid_argument{"Cannot merge count-min sketches with different dimensions"};
+    }
+
+    for (std::size_t i{}; i < counters.size(); ++i) {
         counters[i].requestCount += other.counters[i].requestCount;
         counters[i].bytesCount += other.counters[i].bytesCount;
     }
 }
+
 std::size_t CountMinSketch::fnv1a(const std::string_view t_value) {
     std::uint64_t hash = FNV_OFFSET;
 

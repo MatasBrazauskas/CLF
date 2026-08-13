@@ -22,8 +22,8 @@ public:
     [[nodiscard]] ReqAndBytesCnt get(std::string_view key) const;
     void merge(const CountMinSketch& other);
 private:
-    static constexpr std::size_t FNV_OFFSET = 14695981039346656037ULL;
-    static constexpr std::size_t FNV_PRIME = 1099511628211ULL;
+    static constexpr auto FNV_OFFSET = 14695981039346656037ULL;
+    static constexpr auto FNV_PRIME = 1099511628211ULL;
 
     std::size_t width;
     std::size_t depth;

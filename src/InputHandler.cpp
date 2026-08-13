@@ -3,7 +3,7 @@
 #include <argp.h>
 #include <string>
 
-Inputs::Inputs(): fileName{}, n{} {}
+Inputs::Inputs(): fileName{}, n{}, epsilon{0.01f}, delta{0.1f} {}
 
 static char doc[] = "V1";
 static char args_doc[] = "[ARG1...]";
@@ -57,11 +57,13 @@ std::optional<Inputs> validateInputs(const int argc, char **argv) {
         return std::nullopt;
     }
 
-    if (inputs.fileName.empty() or inputs.n == 0) {
+    if (inputs.fileName.empty() or inputs.n <= 0) {
         return std::nullopt;
     }
 
-    if (inputs.epsilon == 0.0f or inputs.epsilon == 0.0f) {}
+    if (inputs.epsilon <= 0.0f or inputs.delta <= 0.0f or inputs.delta >= 1.0f) {
+        return std::nullopt;
+    }
 
     return inputs;
 }
