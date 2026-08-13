@@ -29,9 +29,6 @@ int main(const int argc, char** argv) {
     const auto stats = statHandler.retrieveStats(inputs.n);
 
     std::println("Total requests: {}.", stats.totalRequestCount);
-
-    std::println();
-
     std::println("Total bytes transferred: {}.", stats.totalBytesCount);
 
     std::println();
