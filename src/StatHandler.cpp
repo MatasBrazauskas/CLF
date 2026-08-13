@@ -96,15 +96,7 @@ void StatHandler::merge(const StatHandler& other)
 }
 
 static bool isBetter(const GroupInfo& lhs, const GroupInfo& rhs) {
-    if (lhs.bytesCount != rhs.bytesCount) {
-        return lhs.bytesCount > rhs.bytesCount;
-    }
-
-    if (lhs.requestCount != rhs.requestCount) {
-        return lhs.requestCount > rhs.requestCount;
-    }
-
-    return lhs.name < rhs.name;
+    return lhs.requestCount > rhs.requestCount;
 }
 
 static void updateTopN(std::vector<TempHash>& top, const std::size_t limit, const std::string_view key, const std::size_t hash, const ReqAndBytesCnt& value) {
