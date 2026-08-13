@@ -1,11 +1,13 @@
 #include "LineParser.hpp"
 
+#include <stdexcept>
+
 LineInfo::LineInfo(std::string_view t_ipAddress, std::string_view t_identProtocol, std::string_view t_userId, std::string_view t_date, std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount)
     : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount} {}
 
 static int parseStrViewToInt(const std::string_view str) {
-    if (str == "-") {
-        return 0;
+    if (str == "-") [[unlikely]] {
+        throw std::runtime_error("");
     }
 
     int val{};
