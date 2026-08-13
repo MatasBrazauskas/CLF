@@ -84,7 +84,7 @@ std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, R
     for (const auto& [data,dataStats] : map | std::views::drop(n)) {
         const auto& [requestCnt, byteCnt] = dataStats;
 
-        if (auto& lastVectorElement = result.back(); lastVectorElement.bytesCount < byteCnt) {
+        if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
             lastVectorElement = {data, requestCnt, byteCnt};
             std::ranges::sort(result, sortingPredicate);
         }
