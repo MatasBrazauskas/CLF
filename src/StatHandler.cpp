@@ -41,7 +41,7 @@ void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
             return;
         }
 
-        const auto hourDate = line.date.substr(1, secondColon - 1);
+        const auto hourDate = line.date.substr(0, secondColon);
         if (hourDate.empty()) {
             return;
         }
@@ -76,7 +76,7 @@ std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, R
     for (const auto& [data,dataStats] : map | std::views::drop(n)) {
         const auto& [requestCnt, byteCnt] = dataStats;
 
-        if (auto& lastVectorElement = result.back(); lastVectorElement.bytesCount < byteCnt) {
+        if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
             lastVectorElement = {data, requestCnt, byteCnt};
             std::ranges::sort(result, sortingPredicate);
         }
