@@ -53,7 +53,7 @@ int main(const int argc, char** argv) {
     }
 
     std::println();
-    std::println("\nMost packed hours:");
+    std::println("Most packed hours:");
     for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
         std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
     }

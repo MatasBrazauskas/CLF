@@ -1,5 +1,7 @@
 #include "LineParser.hpp"
 
+#include <charconv>
+
 LineInfo::LineInfo(const std::string& t_ipAddress, const std::string& t_identProtocol, const std::string& t_userId, const std::string& t_date, const std::string& t_clientRequest, const int t_statusCode, const int t_byteCount)
     : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount} {}
 
@@ -28,11 +30,13 @@ std::optional<LineInfo> parseLine(const std::string& line) {
         const std::size_t statusCodeStartIndex = clientRequestEndIndex + 2;
         const std::size_t statusCodeEndIndex = line.find(' ', statusCodeStartIndex);
         const std::string statusCodeStr = line.substr(statusCodeStartIndex, statusCodeEndIndex - statusCodeStartIndex);
-        const int statusCode = std::stoi(statusCodeStr);
+        int statusCode{};
+        std::from_chars(statusCodeStr.data(),statusCodeStr.data() + statusCodeStr.size(), statusCode);
 
         const std::size_t byteCountStartIndex = statusCodeEndIndex + 1;
         const std::string byteCountStr = line.substr(byteCountStartIndex);
-        const int byteCount = std::stoi(byteCountStr);
+        int byteCount{};
+        std::from_chars(byteCountStr.data(), byteCountStr.data() + byteCountStr.size(), byteCount);
 
         return LineInfo{ipAddress, identProtocol, userId, date, clientRequest, statusCode, byteCount};
     } catch (std::exception& _) {
