@@ -41,7 +41,7 @@ void StatHandler::analyzeLine(std::optional<LineInfo> lineOpt) {
             return;
         }
 
-        const auto hourDate = line.date.substr(1, secondColon - 1);
+        const auto hourDate = line.date.substr(0, secondColon);
         if (hourDate.empty()) {
             return;
         }
