@@ -60,16 +60,12 @@ const Stats& StatHandler::retrieveStats(const std::size_t) {
         return user.groupInfo;
     };
 
-    const auto bytesCmp = [](const TempHash& a, const TempHash& b) {
-        return ranksAbove(a.groupInfo, b.groupInfo);
-    };
-
     const auto requestsCmp = [](const TempHash& a, const TempHash& b) {
         return ranksAbove(a.groupInfo, b.groupInfo);
     };
 
-    std::ranges::sort(topUsers, bytesCmp);
-    std::ranges::sort(topIpAddresses, bytesCmp);
+    std::ranges::sort(topUsers, requestsCmp);
+    std::ranges::sort(topIpAddresses, requestsCmp);
     std::ranges::sort(topHours, requestsCmp);
 
     stats.mostActiveUsers = topUsers | std::views::transform(trs) | std::ranges::to<std::vector>();
