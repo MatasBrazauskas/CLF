@@ -4,9 +4,13 @@ LineInfo::LineInfo(std::string_view t_ipAddress, std::string_view t_identProtoco
     : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount} {}
 
 static int parseStrViewToInt(const std::string_view str) {
+    if (str == "-") {
+        return 0;
+    }
+
     int val{};
     for (int i = 0; i < str.length(); ++i) {
-        val = val * 10 + (str.at(i) - '0');
+        val = val * 10 + (str[i] - '0');
     }
 
     return val;
