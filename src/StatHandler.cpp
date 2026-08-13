@@ -102,9 +102,5 @@ static void updateTopN(std::vector<TempHash>& top, const std::string_view key, c
 }
 
 static bool ranksAbove(const GroupInfo& a, const GroupInfo& b) {
-    if (a.bytesCount != b.bytesCount) {
-        return a.bytesCount > b.bytesCount;
-    }
-
     return a.requestCount > b.requestCount;
 }
