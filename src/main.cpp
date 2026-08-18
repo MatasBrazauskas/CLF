@@ -5,7 +5,6 @@
 #include <ranges>
 #include <thread>
 #include <vector>
-
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 #include "InputHandler.hpp"
