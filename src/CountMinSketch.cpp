@@ -57,10 +57,6 @@ ReqAndBytesCnt CountMinSketch::get(const std::string_view t_key) const
 
 void CountMinSketch::merge(const CountMinSketch& other)
 {
-    if (width != other.width or depth != other.depth or counters.size() != other.counters.size()) {
-        throw std::invalid_argument{"Cannot merge count-min sketches with different dimensions"};
-    }
-
     for (std::size_t i{}; i < counters.size(); ++i) {
         counters[i].requestCount += other.counters[i].requestCount;
         counters[i].bytesCount += other.counters[i].bytesCount;

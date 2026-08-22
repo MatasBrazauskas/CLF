@@ -2,7 +2,6 @@
 
 #include <algorithm>
 
-static bool isBetter(const GroupInfo& lhs, const GroupInfo& rhs);
 static void updateTopN(std::vector<TempHash>& top, std::size_t limit, std::string_view key, std::size_t hash, const ReqAndBytesCnt& value);
 static std::vector<GroupInfo> buildSortedGroups(const std::vector<TempHash>& candidates);
 static std::vector<GroupInfo> buildFinalTopN(const std::vector<TempHash>& candidates, std::size_t limit);
@@ -10,11 +9,7 @@ static std::vector<GroupInfo> buildFinalTopN(const std::vector<TempHash>& candid
 static std::vector<GroupInfo> mergeTopN(const std::vector<GroupInfo>& vecA, const std::vector<GroupInfo>& vecB);
 static std::vector<TempHash> toTempHashVector(const std::vector<GroupInfo>& groups);
 
-Stats::Stats(const std::size_t n): totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}},
-    mostActiveUsers{},
-    mostActiveIpAddresses{},
-    mostActiveHours{}
-{
+Stats::Stats(const std::size_t n): totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {
     mostActiveUsers.reserve(n);
     mostActiveIpAddresses.reserve(n);
     mostActiveHours.reserve(n);
@@ -95,10 +90,6 @@ void StatHandler::merge(const StatHandler& other)
     stats.mostActiveHours = buildFinalTopN(topHours, hourInfo, topLimit);
 }
 
-static bool isBetter(const GroupInfo& lhs, const GroupInfo& rhs) {
-    return lhs.requestCount > rhs.requestCount;
-}
-
 static void updateTopN(std::vector<TempHash>& top, const std::size_t limit, const std::string_view key, const std::size_t hash, const ReqAndBytesCnt& value) {
     const GroupInfo candidate{key, value.requestCount, value.bytesCount};
 
@@ -114,13 +105,13 @@ static void updateTopN(std::vector<TempHash>& top, const std::size_t limit, cons
             return;
         }
 
-        if (isBetter(top[minIndex].groupInfo, top[i].groupInfo)) {
+        if (top[minIndex].groupInfo < top[i].groupInfo) {
             minIndex = i;
         }
 
     }
 
-    if (not isBetter(candidate, top[minIndex].groupInfo)) {
+    if (not (candidate < top[minIndex].groupInfo)) {
         return;
     }
 
@@ -135,7 +126,7 @@ static std::vector<GroupInfo> buildSortedGroups(const std::vector<TempHash>& can
         result.push_back(candidate.groupInfo);
     }
 
-    std::ranges::sort(result, isBetter);
+    std::ranges::sort(result);
 
     return result;
 }
@@ -165,7 +156,7 @@ static std::vector<GroupInfo> buildFinalTopN(const std::vector<TempHash>& candid
         result.push_back({key, value.requestCount, value.bytesCount});
     }
 
-    std::ranges::sort(result, isBetter);
+    std::ranges::sort(result);
 
     if (result.size() > limit) {
         result.resize(limit);
@@ -193,7 +184,7 @@ static std::vector<GroupInfo> mergeTopN(const std::vector<GroupInfo>& vecA, cons
     std::size_t bIndex{};
 
     while (aIndex < vecA.size() or bIndex < vecB.size()) {
-        if (bIndex == vecB.size() or (aIndex < vecA.size() and isBetter(vecA[aIndex], vecB[bIndex]))) {
+        if (bIndex == vecB.size() or (aIndex < vecA.size() and vecA[aIndex] < vecB[bIndex])) {
             appendOrMerge(vecA[aIndex]);
             ++aIndex;
         } else {
@@ -202,7 +193,7 @@ static std::vector<GroupInfo> mergeTopN(const std::vector<GroupInfo>& vecA, cons
         }
     }
 
-    std::ranges::sort(merged, isBetter);
+    std::ranges::sort(merged);
 
     return merged;
 }
