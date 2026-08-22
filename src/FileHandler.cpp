@@ -27,14 +27,16 @@ FileHandler::FileHandler(const std::string_view filePath) {
         return;
     }
 
-    char *memoryMappedFile = static_cast<char *>(mmap(nullptr, sb.st_size, PROT_READ, MAP_SHARED, fd, 0));
+    char *memoryMappedFile = static_cast<char *>(mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
     close(fd);
 
     if (memoryMappedFile == MAP_FAILED) {
         throw std::runtime_error("Failed to create memory map");
     }
 
-    madvise(memoryMappedFile, sb.st_size, MADV_SEQUENTIAL);
+    if (madvise(memoryMappedFile, sb.st_size, MADV_SEQUENTIAL) == -1) {
+        throw std::runtime_error("Failed to create memory map");
+    }
 
     mappedFile = std::string_view{memoryMappedFile, static_cast<std::size_t>(sb.st_size)};
 }
