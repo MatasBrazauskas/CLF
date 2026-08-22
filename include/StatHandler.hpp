@@ -34,6 +34,19 @@ struct Stats {
     std::vector<GroupInfo> mostActiveHours;
 };
 
+/*struct StringViewHash {
+    std::size_t operator()(const std::string_view t_value) const noexcept {
+        std::size_t hash{14695981039346656037ULL};
+
+        for (const auto byte : t_value) {
+            hash ^= static_cast<unsigned char>(byte);
+            hash *= 1099511628211ULL;
+        }
+
+        return hash;
+    }
+};*/
+
 class StatHandler {
 public:
     StatHandler(std::size_t);
