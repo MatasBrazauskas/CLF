@@ -3,6 +3,8 @@
 #include <fstream>
 #include <generator>
 
+#include "Simd.hpp"
+
 class FileHandler {
 public:
     FileHandler() = delete;

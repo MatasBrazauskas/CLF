@@ -20,9 +20,10 @@ int main(const int argc, char** argv) {
 
     StatHandler statHandler{static_cast<std::size_t>(inputs.reserveCount)};
     FileHandler fileHandler{inputs.fileName};
+    Simd simd;
 
     for(const std::string_view line : fileHandler.getLine()) {
-        const auto lineInfo = parseLine(line);
+        const auto lineInfo = parseLine(simd, line);
         statHandler.analyzeLine(lineInfo);
     }
 

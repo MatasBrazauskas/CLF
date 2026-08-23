@@ -10,6 +10,9 @@
 #include <array>
 #include <vector>
 
+#define XXH_INLINE_ALL
+#include "xxhash.h"
+
 struct ReqAndBytesCnt {
     std::size_t requestCount;
     std::size_t bytesCount;
@@ -27,25 +30,17 @@ struct GroupInfo {
 struct Stats {
     Stats();
 
-    std::size_t totalRequestCount;
-    std::size_t totalBytesCount;
-    std::array<std::size_t, 4> statusCodeCount;
     std::vector<GroupInfo> mostActiveUsers;
     std::vector<GroupInfo> mostActiveIpAddresses;
     std::vector<GroupInfo> mostActiveHours;
+    std::array<std::size_t, 4> statusCodeCount;
+    std::size_t totalRequestCount;
+    std::size_t totalBytesCount;
 };
 
 /*struct StringViewHash {
     std::size_t operator()(const std::string_view t_value) const noexcept {
-        std::size_t hash{14695981039346656037ULL};
-        const int n = std::min<int>(32, t_value.size());
-
-        for (int i{}; i < n; i++) {
-            hash ^= static_cast<unsigned char>(t_value[i]);
-            hash *= 1099511628211ULL;
-        }
-
-        return hash;
+        return XXH64(t_value.data(), t_value.size(), 0);
     }
 };*/
 
@@ -57,7 +52,7 @@ public:
 private:
     Stats stats;
 
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> userInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> ipAddressInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> hourInfo;
+    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> userInfo;
+    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> ipAddressInfo;
+    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> hourInfo;
 };

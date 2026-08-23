@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Simd.hpp"
+
 #include <string>
 #include <optional>
 
@@ -16,4 +18,4 @@ struct LineInfo {
     const int byteCount;
 };
 
-std::optional<LineInfo> parseLine(std::string_view line);
+std::optional<LineInfo> parseLine(Simd&, std::string_view);

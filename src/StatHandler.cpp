@@ -5,7 +5,7 @@
 #include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt>& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/>& map, const std::size_t n);
 
 Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
@@ -62,7 +62,7 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt>& map, const std::size_t n) {
+std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/>& map, const std::size_t n) {
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
         return a.requestCount > b.requestCount;
     };
