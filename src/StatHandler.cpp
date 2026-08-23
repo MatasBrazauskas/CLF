@@ -5,19 +5,12 @@
 #include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt>& map, const std::size_t n);
 
 Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
 
-StatHandler::StatHandler(const std::size_t t_reserveSize): stats{} {
-    userInfo.max_load_factor(0.5f);
-    ipAddressInfo.max_load_factor(0.5f);
-    hourInfo.max_load_factor(0.5f);
-
-    userInfo.reserve(t_reserveSize);
-    ipAddressInfo.reserve(t_reserveSize);
-    hourInfo.reserve(t_reserveSize);
-}
+StatHandler::StatHandler(const std::size_t t_reserveSize)
+    : stats{}, userInfo{t_reserveSize, ""}, ipAddressInfo{t_reserveSize, ""}, hourInfo {t_reserveSize, ""} {}
 
 void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
     if (lineOpt.has_value()) {
@@ -31,11 +24,11 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
             this->stats.statusCodeCount[arrayIndex - 2]++;
         }
 
-        const auto& userIt = userInfo.try_emplace(line.userId, ReqAndBytesCnt{0, 0}).first;
+        const auto& userIt = userInfo.emplace(line.userId, ReqAndBytesCnt{0, 0}).first;
         userIt->second.requestCount++;
         userIt->second.bytesCount += line.byteCount;
 
-        const auto& ipAddressIt = ipAddressInfo.try_emplace(line.ipAddress, ReqAndBytesCnt{0, 0}).first;
+        const auto& ipAddressIt = ipAddressInfo.emplace(line.ipAddress, ReqAndBytesCnt{0, 0}).first;
         ipAddressIt->second.requestCount++;
         ipAddressIt->second.bytesCount += line.byteCount;
 
@@ -54,7 +47,7 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
             return;
         }
 
-        const auto& hourIt = hourInfo.try_emplace(hourDate, ReqAndBytesCnt{0,0}).first;
+        const auto& hourIt = hourInfo.emplace(hourDate, ReqAndBytesCnt{0,0}).first;
         hourIt->second.requestCount++;
         hourIt->second.bytesCount += line.byteCount;
 
@@ -69,24 +62,26 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(std::unordered_map<std::string_view, ReqAndBytesCnt>& map, const std::size_t n) {
+std::vector<GroupInfo> mostRequestPerData(rigtorp::HashMap<std::string_view, ReqAndBytesCnt>& map, const std::size_t n) {
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
         return a.requestCount > b.requestCount;
     };
 
-    const auto transformFunction = [](const std::pair<std::string_view, ReqAndBytesCnt>& pair) {
-        return GroupInfo {pair.first, pair.second.requestCount, pair.second.bytesCount};
-    };
+    std::vector<GroupInfo> result;
+    result.reserve(n);
 
-    auto result = map | std::views::take(n) | std::views::transform(transformFunction) | std::ranges::to<std::vector>();
-    std::ranges::sort(result, sortingPredicate);
-
-    for (const auto& [data,dataStats] : map | std::views::drop(n)) {
+    std::size_t count{};
+    for (const auto& [data, dataStats] : map) {
         const auto& [requestCnt, byteCnt] = dataStats;
 
-        if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
-            lastVectorElement = {data, requestCnt, byteCnt};
-            std::ranges::sort(result, sortingPredicate);
+        if (count < n) {
+            result.emplace_back(data, requestCnt, byteCnt);
+            ++count;
+        } else {
+            if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
+                lastVectorElement = {data, requestCnt, byteCnt};
+                std::ranges::sort(result, sortingPredicate);
+            }
         }
     }
 
