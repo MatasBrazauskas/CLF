@@ -63,15 +63,20 @@ FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_ch
 
     fileChunks.emplace_back(mappedFile + startOfChunk, mappedFileSize - startOfChunk);
 
-    /*for (auto& chunk : fileChunks) {
+    for (auto& chunk : fileChunks) {
         const auto addr = reinterpret_cast<std::uintptr_t>(chunk.data());
 
         const auto aligned_addr = addr & page_mask;
+
         const std::size_t delta = addr - aligned_addr;
 
-        std::size_t aligned_len = len + delta;
-        madvise(chunk)
-    }*/
+        std::size_t aligned_len = chunk.size() + delta;
+        aligned_len = (aligned_len + page_size - 1) & page_mask;
+
+        if(madvise(reinterpret_cast<void*>(aligned_addr), aligned_len, MADV_SEQUENTIAL) == -1) {
+            throw std::runtime_error("Failed to create memory map");
+        }
+    }
 }
 
 std::generator<std::string_view> FileHandler::getLine(const int t_index) const {
