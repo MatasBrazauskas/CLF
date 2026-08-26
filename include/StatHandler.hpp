@@ -1,17 +1,12 @@
 #pragma once
 
 #include "LineParser.hpp"
-#include <HashMap.h>
+#include <RH_HashMap.hpp>
 
 #include <cstddef>
 #include <utility>
-#include <string>
-#include <unordered_map>
 #include <array>
 #include <vector>
-
-#define XXH_INLINE_ALL
-#include "xxhash.h"
 
 struct ReqAndBytesCnt {
     std::size_t requestCount;
@@ -38,12 +33,6 @@ struct Stats {
     std::size_t totalBytesCount;
 };
 
-/*struct StringViewHash {
-    std::size_t operator()(const std::string_view t_value) const noexcept {
-        return XXH64(t_value.data(), t_value.size(), 0);
-    }
-};*/
-
 class StatHandler {
 public:
     StatHandler(std::size_t);
@@ -52,7 +41,7 @@ public:
 private:
     Stats stats;
 
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> userInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> ipAddressInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt/*, StringViewHash*/> hourInfo;
+    RH_HashMap userInfo;
+    RH_HashMap ipAddressInfo;
+    RH_HashMap hourInfo;
 };
