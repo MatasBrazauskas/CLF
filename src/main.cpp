@@ -1,12 +1,11 @@
-#include <print>
-
+#include "InputHandler.hpp"
+#include "StatHandler.hpp"
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 
 #include <string>
-
-#include "InputHandler.hpp"
-#include "StatHandler.hpp"
+#include <print>
+#include <thread>
 
 using namespace std::string_literals;
 
@@ -17,17 +16,34 @@ int main(const int argc, char** argv) {
     }
 
     const auto inputs = inputsOpt.value();
+    const std::size_t threadCount = std::thread::hardware_concurrency();
 
-    StatHandler statHandler{static_cast<std::size_t>(inputs.reserveCount)};
-    FileHandler fileHandler{inputs.fileName};
-    Simd simd;
+    FileHandler fileHandler{inputs.fileName, threadCount};
+    std::vector<Simd> simd{threadCount};
 
-    for(const std::string_view line : fileHandler.getLine()) {
-        const auto lineInfo = parseLine(simd, line);
-        statHandler.analyzeLine(lineInfo);
+    std::vector<StatHandler> statHandlers;
+    statHandlers.reserve(threadCount);
+
+    std::vector<std::thread> threads;
+    threads.reserve(threadCount);
+
+    const auto fn = [&fileHandler, &simd](StatHandler& stats, const long index) {
+        for(const std::string_view line : fileHandler.getLine(index)) {
+            const auto lineInfo = parseLine(simd[index], line);
+            stats.analyzeLine(lineInfo);
+        }
+    };
+
+    for (std::size_t i{}; i < threadCount; ++i) {
+        statHandlers.emplace_back(static_cast<std::size_t>(inputs.reserveCount));
+        threads.emplace_back(fn, std::ref(statHandlers[i]), i);
     }
 
-    const auto stats = statHandler.retrieveStats(inputs.n);
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    const auto stats = statHandlers[0].retrieveStats(inputs.n);
 
     std::println("Total requests: {}.", stats.totalRequestCount);
     std::println("Total bytes transferred: {}.", stats.totalBytesCount);

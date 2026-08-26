@@ -66,6 +66,10 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) 
     for (const auto& entry : map.buckets_) {
         const auto& [keyData, requestCnt, bytesCnt, keyLength, hashValue] = entry;
 
+        if (keyData == nullptr) {
+            continue;
+        }
+
         if (count < n) {
             result.emplace_back(std::string_view{keyData, keyLength}, requestCnt, bytesCnt);
             ++count;
