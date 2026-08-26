@@ -1,22 +1,12 @@
 #pragma once
 
 #include "LineParser.hpp"
-#include <HashMap.h>
 
 #include <cstddef>
 #include <utility>
-#include <string>
-#include <unordered_map>
 #include <array>
 #include <vector>
-
-struct ReqAndBytesCnt {
-    std::size_t requestCount;
-    std::size_t bytesCount;
-
-    ReqAndBytesCnt(): requestCount{}, bytesCount{} {};
-    ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt): requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
-};
+#include <Cache.hpp>
 
 struct GroupInfo {
     std::string_view name;
@@ -35,29 +25,15 @@ struct Stats {
     std::vector<GroupInfo> mostActiveHours;
 };
 
-/*struct StringViewHash {
-    std::size_t operator()(const std::string_view t_value) const noexcept {
-        std::size_t hash{14695981039346656037ULL};
-        const int n = std::min<int>(32, t_value.size());
-
-        for (int i{}; i < n; i++) {
-            hash ^= static_cast<unsigned char>(t_value[i]);
-            hash *= 1099511628211ULL;
-        }
-
-        return hash;
-    }
-};*/
-
 class StatHandler {
 public:
-    StatHandler(std::size_t);
+    StatHandler(std::size_t, std::size_t);
     void analyzeLine(const std::optional<LineInfo> &);
     const Stats& retrieveStats(std::size_t n);
 private:
     Stats stats;
 
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> userInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> ipAddressInfo;
-    rigtorp::HashMap<std::string_view, ReqAndBytesCnt> hourInfo;
+    Cache userInfo;
+    Cache ipAddressInfo;
+    Cache hourInfo;
 };
