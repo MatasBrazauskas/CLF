@@ -76,4 +76,6 @@ std::size_t Simd::findNewLine(const std::string_view t_line, const std::size_t t
             return t_offset + i + std::countr_zero(mask);
         }
     }
+
+    std::unreachable();
 }

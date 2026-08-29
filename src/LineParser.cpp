@@ -11,7 +11,7 @@ static int parseStrViewToInt(const std::string_view str) {
     }
 
     int val{};
-    for (int i = 0; i < str.length(); ++i) {
+    for (int i{}; i < str.length(); ++i) {
         val = val * 10 + (str[i] - '0');
     }
 
