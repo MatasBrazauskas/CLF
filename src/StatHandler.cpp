@@ -2,12 +2,12 @@
 
 #include <algorithm>
 #include <iostream>
-#include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, std::size_t n);
+static std::vector<GroupInfo> mergeTopStats(const std::vector<GroupInfo>& left, const std::vector<GroupInfo>& right, std::size_t n);
 
-Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
+Stats::Stats(): statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
 
 StatHandler::StatHandler(const std::size_t t_reserveSize)
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
@@ -46,10 +46,10 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
     }
 }
 
-const Stats& StatHandler::retrieveStats(const std::size_t n) {
-    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
-    stats.mostActiveUsers = mostRequestPerData(userInfo, n);
-    stats.mostActiveHours = mostRequestPerData(hourInfo, n);
+Stats& StatHandler::retrieveStats(const std::size_t t_n) {
+    stats.mostActiveUsers = mostRequestPerData(userInfo, t_n);
+    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, t_n);
+    stats.mostActiveHours = mostRequestPerData(hourInfo, t_n);
 
     return stats;
 }
@@ -73,6 +73,9 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) 
         if (count < n) {
             result.emplace_back(std::string_view{keyData, keyLength}, requestCnt, bytesCnt);
             ++count;
+            if (count == n) {
+                std::ranges::sort(result, sortingPredicate);
+            }
         } else {
             if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
                 lastVectorElement = {std::string_view{keyData, keyLength}, requestCnt, bytesCnt};
@@ -81,5 +84,6 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) 
         }
     }
 
+    std::ranges::sort(result, sortingPredicate);
     return result;
 }

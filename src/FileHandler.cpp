@@ -12,7 +12,7 @@
 static const std::size_t page_size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
 const std::size_t page_mask = ~(page_size - 1);
 
-FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_chunks) {
+FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_chunks, Simd& t_simd) {
     fileChunks.reserve(t_chunks);
 
     const int fd = open(filePath.data(), O_RDONLY);
@@ -44,21 +44,12 @@ FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_ch
     const uint chunkSize = mappedFileSize / (t_chunks);
     uint startOfChunk{};
     for (int i{}; i < t_chunks - 1; ++i) {
-        std::size_t index{};
+        const auto endOfChunk = startOfChunk + chunkSize;
+        const auto chunk = std::string_view{mappedFile + endOfChunk, chunkSize};
+        const std::size_t index = t_simd.findNewLine(chunk);
 
-        for (uint j{startOfChunk + chunkSize}; j < mappedFileSize; ++j) {
-            if (mappedFile[j] == '\n') {
-                index = j;
-                break;
-            }
-        }
-
-        if (index == 0) {
-            throw std::runtime_error{"File chunk at index " + std::to_string(startOfChunk)};
-        }
-
-        fileChunks.emplace_back(mappedFile + startOfChunk, index - startOfChunk);
-        startOfChunk = index + 1;
+        fileChunks.emplace_back(mappedFile + startOfChunk, index + endOfChunk - startOfChunk);
+        startOfChunk = endOfChunk + index + 1;
     }
 
     fileChunks.emplace_back(mappedFile + startOfChunk, mappedFileSize - startOfChunk);
@@ -67,11 +58,9 @@ FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_ch
         const auto addr = reinterpret_cast<std::uintptr_t>(chunk.data());
 
         const auto aligned_addr = addr & page_mask;
-
         const std::size_t delta = addr - aligned_addr;
 
-        std::size_t aligned_len = chunk.size() + delta;
-        aligned_len = (aligned_len + page_size - 1) & page_mask;
+        const std::size_t aligned_len = (chunk.size() + delta + page_size - 1) & page_mask;
 
         if(madvise(reinterpret_cast<void*>(aligned_addr), aligned_len, MADV_SEQUENTIAL) == -1) {
             throw std::runtime_error("Failed to create memory map");

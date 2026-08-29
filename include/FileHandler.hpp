@@ -2,13 +2,14 @@
 
 #pragma once
 
+#include <Simd.hpp>
 #include <generator>
 #include <vector>
 
 class FileHandler {
 public:
     FileHandler() = delete;
-    explicit FileHandler(std::string_view, std::size_t);
+    explicit FileHandler(std::string_view, std::size_t, Simd&);
     [[nodiscard]] std::generator<std::string_view> getLine(int) const;
     ~FileHandler();
 private:

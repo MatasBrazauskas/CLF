@@ -66,14 +66,14 @@ Simd::Simd()
     return std::string_view::npos;
 }
 
-std::size_t Simd::findNewLine(const std::string_view t_line, const std::size_t t_offset) const {
+std::size_t Simd::findNewLine(const std::string_view t_line) const {
     for (std::size_t i{}; i <= t_line.size(); i += 32) {
-        const __m256i dataChunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(t_line.data() + i + t_offset));
+        const __m256i dataChunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(t_line.data() + i));
         const __m256i cmp = _mm256_cmpeq_epi8(dataChunk, Delimiters[3].v);
         const std::uint32_t mask = static_cast<std::uint32_t>(_mm256_movemask_epi8(cmp));
 
         if (mask != 0) {
-            return t_offset + i + std::countr_zero(mask);
+            return i + std::countr_zero(mask);
         }
     }
 }

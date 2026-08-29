@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <utility>
 #include <array>
+#include <unordered_map>
 #include <vector>
 
 struct ReqAndBytesCnt {
@@ -35,9 +36,9 @@ struct Stats {
 
 class StatHandler {
 public:
-    StatHandler(std::size_t);
+    explicit StatHandler(std::size_t);
     void analyzeLine(const std::optional<LineInfo> &);
-    const Stats& retrieveStats(std::size_t n);
+    Stats& retrieveStats(std::size_t);
 private:
     Stats stats;
 
