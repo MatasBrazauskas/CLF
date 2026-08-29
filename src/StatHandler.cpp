@@ -7,7 +7,7 @@
 
 static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n);
 
-Stats::Stats() : totalRequestCount{}, totalBytesCount{}, statusCodeCount{{0,0,0,0}} {}
+Stats::Stats(): statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
 
 StatHandler::StatHandler(const std::size_t t_reserveSize)
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
@@ -47,8 +47,8 @@ void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
 }
 
 const Stats& StatHandler::retrieveStats(const std::size_t n) {
-    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
     stats.mostActiveUsers = mostRequestPerData(userInfo, n);
+    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
     stats.mostActiveHours = mostRequestPerData(hourInfo, n);
 
     return stats;

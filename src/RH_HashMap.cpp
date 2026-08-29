@@ -17,16 +17,18 @@ bool RH_HashMap::append(const std::string_view t_key, const std::size_t t_val1, 
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
-    for (std::size_t probes{0}; probes < buckets_.size(); ++probes) {
+    for (std::size_t probes{}; probes < buckets_.size(); ++probes) {
         if (buckets_[idx].keyLength == 0) {
             buckets_[idx] = KeyValue(t_key, t_val1, t_val2, hash);
             return true;
         }
+
         if (buckets_[idx].hashValue == hash) {
             buckets_[idx].val1 += t_val1;
             buckets_[idx].val2 += t_val2;
             return true;
         }
+
         idx = modulo(idx + 1);
     }
 
@@ -37,13 +39,15 @@ const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
-    for (std::size_t probes = 0; probes < buckets_.size(); ++probes) {
-        if (buckets_[idx].keyLength == 0) {
+    for (std::size_t probes{}; probes < buckets_.size(); ++probes) {
+        if (buckets_[idx].keyData == nullptr) {
             return nullptr;
         }
+
         if (buckets_[idx].hashValue == hash) {
             return &buckets_[idx];
         }
+
         idx = modulo(idx + 1);
     }
 
