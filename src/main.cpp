@@ -96,7 +96,7 @@ int main(const int argc, char** argv) {
             const auto lineInfo = parseLine(simd[index], line);
             stat.analyzeLine(lineInfo);
         }
-        stats[index] = &stat.retrieveStats(n);
+        stats[index] = &stat.retrieveStats(n * 4);
     };
 
     for (std::size_t i = 0; i < threadCount; ++i) {
