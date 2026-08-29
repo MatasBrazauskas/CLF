@@ -17,7 +17,7 @@ bool RH_HashMap::append(const std::string_view t_key, const std::size_t t_val1, 
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
-    for (std::size_t probes = 0; probes < buckets_.size(); ++probes) {
+    for (std::size_t probes{0}; probes < buckets_.size(); ++probes) {
         if (buckets_[idx].keyLength == 0) {
             buckets_[idx] = KeyValue(t_key, t_val1, t_val2, hash);
             return true;

@@ -56,6 +56,9 @@ const Stats& StatHandler::retrieveStats(const std::size_t n) {
 
 std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) {
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
+        if (a.requestCount == b.requestCount) {
+            return a.bytesCount > b.bytesCount;
+        }
         return a.requestCount > b.requestCount;
     };
 
