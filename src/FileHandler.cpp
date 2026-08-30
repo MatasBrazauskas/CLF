@@ -1,5 +1,6 @@
 #include "FileHandler.hpp"
 
+#include <algorithm>
 #include <string>
 #include <fcntl.h>
 #include <filesystem>
@@ -41,20 +42,34 @@ FileHandler::FileHandler(const std::string_view filePath, const std::size_t t_ch
     }
 
 
-    const uint chunkSize = mappedFileSize / (t_chunks);
-    uint startOfChunk{};
-    for (int i{}; i < t_chunks - 1; ++i) {
-        const auto endOfChunk = startOfChunk + chunkSize;
-        const auto chunk = std::string_view{mappedFile + endOfChunk, chunkSize};
+    const std::size_t chunkSize = mappedFileSize / t_chunks;
+    std::size_t startOfChunk{};
+    for (std::size_t i{}; i + 1 < t_chunks and startOfChunk < mappedFileSize; ++i) {
+        const auto endOfChunk = std::min(startOfChunk + chunkSize, mappedFileSize);
+        if (endOfChunk == mappedFileSize) {
+            break;
+        }
+
+        const auto chunk = std::string_view{mappedFile + endOfChunk, mappedFileSize - endOfChunk};
         const std::size_t index = t_simd.findNewLine(chunk);
+        if (index == std::string_view::npos) {
+            break;
+        }
 
         fileChunks.emplace_back(mappedFile + startOfChunk, index + endOfChunk - startOfChunk);
         startOfChunk = endOfChunk + index + 1;
     }
 
     fileChunks.emplace_back(mappedFile + startOfChunk, mappedFileSize - startOfChunk);
+    while (fileChunks.size() < t_chunks) {
+        fileChunks.emplace_back();
+    }
 
     for (auto& chunk : fileChunks) {
+        if (chunk.empty()) {
+            continue;
+        }
+
         const auto addr = reinterpret_cast<std::uintptr_t>(chunk.data());
 
         const auto aligned_addr = addr & page_mask;
@@ -91,7 +106,7 @@ std::generator<std::string_view> FileHandler::getLine(const int t_index) const {
 }
 
 FileHandler::~FileHandler() {
-    if (mappedFile == nullptr) {
+    if (mappedFile != nullptr) {
         munmap(mappedFile, mappedFileSize);
     }
 }

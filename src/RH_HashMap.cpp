@@ -23,7 +23,7 @@ bool RH_HashMap::append(const std::string_view t_key, const std::size_t t_val1, 
             return true;
         }
 
-        if (buckets_[idx].hashValue == hash and t_key.size() == buckets_[idx].keyLength) {
+        if (buckets_[idx].hashValue == hash and buckets_[idx].keyLength == buckets_[idx].keyLength) {
             buckets_[idx].val1 += t_val1;
             buckets_[idx].val2 += t_val2;
             return true;
@@ -43,7 +43,7 @@ const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
             return nullptr;
         }
 
-        if (buckets_[idx].hashValue == hash and t_key.size() == buckets_[idx].keyLength) {
+        if (buckets_[idx].hashValue == hash and buckets_[idx].keyLength == buckets_[idx].keyLength) {
             return &buckets_[idx];
         }
 

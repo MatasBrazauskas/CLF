@@ -3,6 +3,7 @@
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
 
+#include <algorithm>
 #include <print>
 #include <thread>
 #include <vector>
@@ -13,6 +14,10 @@ Stats mergeStatsParallel(const std::vector<Stats*>& t_stats, const std::size_t t
     Stats s{};
 
     const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
+        if (a.requestCount == b.requestCount) {
+            return a.bytesCount > b.bytesCount;
+        }
+
         return a.requestCount > b.requestCount;
     };
 
@@ -21,20 +26,22 @@ Stats mergeStatsParallel(const std::vector<Stats*>& t_stats, const std::size_t t
         auto Stats::* memberPtr
     ) -> std::vector<GroupInfo> {
         std::unordered_map<std::string_view, GroupInfo> map;
-        map.reserve(t_n * 2 * stats.size());
+
+        std::size_t entryCount{};
+        for (const auto* stat : stats) {
+            entryCount += (stat->*memberPtr).size();
+        }
+        map.reserve(entryCount);
 
         for (const auto* stat : stats) {
             for (const auto& entry : stat->*memberPtr) {
-                auto [it, inserted] = map.try_emplace(entry.name, entry);
-                if (!inserted) {
-                    it->second.requestCount += entry.requestCount;
-                    it->second.bytesCount += entry.bytesCount;
-                }
+                const auto& it = map.try_emplace(entry.name, GroupInfo{entry.name, 0,0}).first;
+                it->second.requestCount += entry.requestCount;
+                it->second.bytesCount += entry.bytesCount;
             }
         }
 
-        const std::size_t outputSize = std::min(t_n, map.size());
-        std::vector<GroupInfo> result(outputSize);
+        std::vector<GroupInfo> result(std::min(t_n, map.size()));
 
         auto valuesView = map | std::views::values;
         std::partial_sort_copy(
@@ -91,25 +98,23 @@ int main(const int argc, char** argv) {
 
     std::vector<Stats*> stats(threadCount);
 
-    const auto fn = [&fileHandler, &simd, &stats](StatHandler& stat, const std::size_t index, const std::size_t n) {
+    const auto fn = [&fileHandler, &simd, &stats](StatHandler& stat, const std::size_t index) {
         for (const std::string_view line : fileHandler.getLine(index)) {
             const auto lineInfo = parseLine(simd[index], line);
             stat.analyzeLine(lineInfo);
         }
-        stats[index] = &stat.retrieveStats(n * 4);
+        stats[index] = &stat.retrieveStats(5);
     };
 
     for (std::size_t i = 0; i < threadCount; ++i) {
-        workerThreads.emplace_back(fn, std::ref(statHandlers[i]), i, inputs.n);
+        workerThreads.emplace_back(fn, std::ref(statHandlers[i]), i);
     }
 
     for (auto& thread : workerThreads) {
         thread.join();
     }
 
-    mergeStatsParallel(stats, inputs.n);
-
-    const Stats& s = *stats.front();
+    const Stats s = mergeStatsParallel(stats, inputs.n);
 
     std::println("Total requests: {}.", s.totalRequestCount);
     std::println("Total bytes transferred: {}.", s.totalBytesCount);

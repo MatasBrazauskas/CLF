@@ -3,7 +3,7 @@
 #include <argp.h>
 #include <string>
 
-Inputs::Inputs(): fileName{}, n{} {}
+Inputs::Inputs(): fileName{}, n{}, reserveCount{} {}
 
 static char doc[] = "V1";
 static char args_doc[] = "[ARG1...]";

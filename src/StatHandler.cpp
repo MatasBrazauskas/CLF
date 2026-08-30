@@ -5,7 +5,7 @@
 #include <ranges>
 
 static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, std::size_t n);
-static std::vector<GroupInfo> mergeTopStats(const std::vector<GroupInfo>& left, const std::vector<GroupInfo>& right, std::size_t n);
+static bool isBetterGroup(const GroupInfo& a, const GroupInfo& b);
 
 Stats::Stats(): statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
 
@@ -54,11 +54,15 @@ Stats& StatHandler::retrieveStats(const std::size_t t_n) {
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) {
-    const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
-        return a.requestCount > b.requestCount;
-    };
+bool isBetterGroup(const GroupInfo& a, const GroupInfo& b) {
+    if (a.requestCount == b.requestCount) {
+        return a.bytesCount > b.bytesCount;
+    }
 
+    return a.requestCount > b.requestCount;
+}
+
+std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) {
     std::vector<GroupInfo> result;
     result.reserve(n);
 
@@ -74,16 +78,16 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) 
             result.emplace_back(std::string_view{keyData, keyLength}, requestCnt, bytesCnt);
             ++count;
             if (count == n) {
-                std::ranges::sort(result, sortingPredicate);
+                std::ranges::sort(result, isBetterGroup);
             }
         } else {
-            if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
-                lastVectorElement = {std::string_view{keyData, keyLength}, requestCnt, bytesCnt};
-                std::ranges::sort(result, sortingPredicate);
+            GroupInfo candidate{std::string_view{keyData, keyLength}, requestCnt, bytesCnt};
+            if (auto& lastVectorElement = result.back(); isBetterGroup(candidate, lastVectorElement)) {
+                lastVectorElement = candidate;
+                std::ranges::sort(result, isBetterGroup);
             }
         }
     }
 
-    std::ranges::sort(result, sortingPredicate);
     return result;
 }
