@@ -9,8 +9,8 @@ struct KeyValue {
     KeyValue(std::string_view, std::size_t, std::size_t, std::uint32_t);
 
     const char *keyData;
-    std::size_t val1;
-    std::size_t val2;
+    std::size_t requestCnt;
+    std::size_t bytesCnt;
     std::uint32_t keyLength;
     std::uint32_t hashValue;
 };
@@ -26,4 +26,6 @@ public:
     std::uint32_t modulo(const std::uint32_t t_hash) const noexcept;
     std::vector<KeyValue> buckets_;
     std::hash<std::string_view> hashFunction_;
+private:
+    void tryPromote(std::size_t, std::size_t);
 };
