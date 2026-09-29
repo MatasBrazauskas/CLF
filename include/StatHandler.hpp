@@ -35,7 +35,7 @@ struct Stats {
 
 class StatHandler {
 public:
-    StatHandler(std::size_t);
+    explicit StatHandler(std::size_t);
     void analyzeLine(const LineInfo&, const char*);
     const Stats& retrieveStats(std::size_t n, const char*);
 private:
