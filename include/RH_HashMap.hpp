@@ -36,6 +36,4 @@ public:
     std::uint32_t modulo(const std::uint32_t t_hash) const noexcept;
     std::vector<KeyValue> buckets_;
     std::hash<std::string_view> hashFunction_;
-private:
-    void tryPromote(std::size_t, std::size_t);
 };

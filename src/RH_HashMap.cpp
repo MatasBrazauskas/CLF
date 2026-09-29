@@ -8,20 +8,6 @@ inline std::uint32_t RH_HashMap::modulo(const std::uint32_t t_hash) const noexce
     return t_hash & (buckets_.size() - 1);
 }
 
-
-void RH_HashMap::tryPromote(const std::size_t t_index, const std::size_t t_probeDistance) {
-    if (t_probeDistance == 0) {
-        return;
-    }
-
-    auto& curr = buckets_[t_index];
-    auto& prev = buckets_[t_index - 1];
-
-    if (curr.comp.requestCnt > prev.comp.requestCnt) {
-        std::swap(prev, curr);
-    }
-}
-
 bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress, const std::size_t t_bytesCnt) {
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
@@ -35,7 +21,6 @@ bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress,
         if (buckets_[idx].hashValue == hash) {
             buckets_[idx].comp.requestCnt++;
             buckets_[idx].bytesCnt += t_bytesCnt;
-            tryPromote(idx, probes);
             return true;
         }
 
