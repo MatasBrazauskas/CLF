@@ -2,10 +2,10 @@
 
 #include <bit>
 
-KeyValue::KeyValue(): keyData(nullptr), val1{}, val2{}, keyLength{}, hashValue{} {}
+KeyValue::KeyValue(): key{""}, val1{}, val2{}, hashValue{} {}
 
-KeyValue::KeyValue(const std::string_view t_key, const std::size_t t_val1, const std::size_t t_val2, const std::uint32_t t_hash)
-    : keyData{t_key.begin()}, val1{t_val1}, val2{t_val2}, keyLength{static_cast<std::uint32_t>(t_key.size())}, hashValue{t_hash} {}
+KeyValue::KeyValue(const std::string_view t_key, const std::size_t t_val1, const std::size_t t_val2, const std::size_t t_hash)
+    : key{t_key}, val1{t_val1}, val2{t_val2}, hashValue{t_hash} {}
 
 RH_HashMap::RH_HashMap(const std::size_t t_reserveSize): buckets_{std::bit_ceil(t_reserveSize)}, hashFunction_{} {}
 
@@ -18,7 +18,7 @@ bool RH_HashMap::append(const std::string_view t_key, const std::size_t t_val1, 
     auto idx = modulo(hash);
 
     for (std::size_t probes{}; probes < buckets_.size(); ++probes) {
-        if (buckets_[idx].keyLength == 0) {
+        if (buckets_[idx].key == "") {
             buckets_[idx] = KeyValue(t_key, t_val1, t_val2, hash);
             return true;
         }
@@ -40,7 +40,7 @@ const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
     auto idx = modulo(hash);
 
     for (std::size_t probes{}; probes < buckets_.size(); ++probes) {
-        if (buckets_[idx].keyData == nullptr) {
+        if (buckets_[idx].key == "") {
             return nullptr;
         }
 

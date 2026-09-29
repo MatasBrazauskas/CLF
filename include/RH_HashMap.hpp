@@ -6,13 +6,12 @@
 
 struct KeyValue {
     KeyValue();
-    KeyValue(std::string_view, std::size_t, std::size_t, std::uint32_t);
+    KeyValue(std::string_view, std::size_t, std::size_t, std::size_t);
 
-    const char *keyData;
+    std::string_view key;
     std::size_t val1;
     std::size_t val2;
-    std::uint32_t keyLength;
-    std::uint32_t hashValue;
+    std::size_t hashValue;
 };
 
 class RH_HashMap {

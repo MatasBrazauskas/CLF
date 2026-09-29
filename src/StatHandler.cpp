@@ -67,14 +67,14 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) 
 
     std::size_t count{};
     for (const auto& entry : map.buckets_) {
-        const auto& [keyData, requestCnt, bytesCnt, keyLength, hashValue] = entry;
+        const auto& [key, requestCnt, bytesCnt, hashValue] = entry;
 
         if (count < n) {
-            result.emplace_back(std::string_view{keyData, keyLength}, requestCnt, bytesCnt);
+            result.emplace_back(key, requestCnt, bytesCnt);
             ++count;
         } else {
             if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
-                lastVectorElement = {std::string_view{keyData, keyLength}, requestCnt, bytesCnt};
+                lastVectorElement = {key, requestCnt, bytesCnt};
                 std::ranges::sort(result, sortingPredicate);
             }
         }
