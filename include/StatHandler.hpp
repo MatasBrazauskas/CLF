@@ -10,9 +10,6 @@
 #include <array>
 #include <vector>
 
-#define XXH_INLINE_ALL
-#include "xxhash.h"
-
 struct ReqAndBytesCnt {
     std::size_t requestCount;
     std::size_t bytesCount;
@@ -37,12 +34,6 @@ struct Stats {
     std::size_t totalRequestCount;
     std::size_t totalBytesCount;
 };
-
-/*struct StringViewHash {
-    std::size_t operator()(const std::string_view t_value) const noexcept {
-        return XXH64(t_value.data(), t_value.size(), 0);
-    }
-};*/
 
 class StatHandler {
 public:
