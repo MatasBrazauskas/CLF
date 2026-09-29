@@ -5,76 +5,58 @@
 #include <future>
 #include <ranges>
 
-static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n);
+static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, const char*);
 
 Stats::Stats(): statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
+
+static bool sortingPredicate(const GroupInfo& a, const GroupInfo& b) {
+    if (a.requestCount == b.requestCount) {
+        return a.bytesCount > b.bytesCount;
+    }
+    return a.requestCount > b.requestCount;
+};
 
 StatHandler::StatHandler(const std::size_t t_reserveSize)
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
 
-void StatHandler::analyzeLine(const std::optional<LineInfo> &lineOpt) {
-    if (lineOpt.has_value()) {
-        const auto& line = lineOpt.value();
+void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) {
+    this->stats.totalRequestCount++;
+    this->stats.totalBytesCount += t_line.byteCount;
 
-        this->stats.totalRequestCount++;
-        this->stats.totalBytesCount += line.byteCount;
-
-        const int arrayIndex = line.statusCode / 100;
-        if (arrayIndex >= 2 and arrayIndex <= 5) {
-            this->stats.statusCodeCount[arrayIndex - 2]++;
-        }
-
-        userInfo.append(line.userId, 1, line.byteCount);
-        ipAddressInfo.append(line.ipAddress, 1, line.byteCount);
-
-        const std::size_t firstColon = line.date.find(':');
-        if (firstColon == std::string::npos) {
-            return;
-        }
-
-        const std::size_t secondColon = line.date.find(':', firstColon + 1);
-        if (secondColon == std::string::npos) {
-            return;
-        }
-
-        const auto hourDate = line.date.substr(0, secondColon);
-        if (hourDate.empty()) {
-            return;
-        }
-
-        hourInfo.append(hourDate, 1, line.byteCount);
+    const int arrayIndex = t_line.statusCode / 100;
+    if (arrayIndex >= 2 and arrayIndex <= 5) {
+        this->stats.statusCodeCount[arrayIndex - 2]++;
     }
+
+    userInfo.append(t_line.userId, t_mmapStart, t_line.byteCount);
+    ipAddressInfo.append(t_line.ipAddress, t_mmapStart, t_line.byteCount);
+
+    const auto hourDate = t_line.date.substr(0, 14);
+    hourInfo.append(hourDate, t_mmapStart, t_line.byteCount);
 }
 
-const Stats& StatHandler::retrieveStats(const std::size_t n) {
-    stats.mostActiveUsers = mostRequestPerData(userInfo, n);
-    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n);
-    stats.mostActiveHours = mostRequestPerData(hourInfo, n);
+const Stats& StatHandler::retrieveStats(const std::size_t n, const char* t_mmapStart) {
+    stats.mostActiveUsers = mostRequestPerData(userInfo, n, t_mmapStart);
+    stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n, t_mmapStart);
+    stats.mostActiveHours = mostRequestPerData(hourInfo, n, t_mmapStart);
 
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n) {
-    const auto sortingPredicate = [](const GroupInfo& a, const GroupInfo& b) {
-        if (a.requestCount == b.requestCount) {
-            return a.bytesCount > b.bytesCount;
-        }
-        return a.requestCount > b.requestCount;
-    };
-
+std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, const char* t_mmapStart) {
     std::vector<GroupInfo> result;
     result.reserve(n);
 
     std::size_t count{};
     for (const auto& entry : map.buckets_) {
-        const auto& [keyData, requestCnt, bytesCnt, keyLength, hashValue] = entry;
+        const auto& [offset, hash, comp, bytes] = entry;
 
         if (count < n) {
-            result.emplace_back(std::string_view{keyData, keyLength}, requestCnt, bytesCnt);
+            result.emplace_back(std::string_view{t_mmapStart + offset, comp.keyLength}, comp.requestCnt, bytes);
             ++count;
         } else {
-            if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < requestCnt) {
-                lastVectorElement = {std::string_view{keyData, keyLength}, requestCnt, bytesCnt};
+            if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < comp.requestCnt) {
+                lastVectorElement = {std::string_view{t_mmapStart + offset, comp.keyLength}, comp.requestCnt, bytes};
                 std::ranges::sort(result, sortingPredicate);
             }
         }

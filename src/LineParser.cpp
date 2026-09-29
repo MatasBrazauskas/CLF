@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-LineInfo::LineInfo(std::string_view t_ipAddress, std::string_view t_identProtocol, std::string_view t_userId, std::string_view t_date, std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount)
+LineInfo::LineInfo(const std::string_view t_ipAddress, const std::string_view t_identProtocol, const std::string_view t_userId, const std::string_view t_date, const std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount)
     : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount} {}
 
 static int parseStrViewToInt(const std::string_view str) {
@@ -18,11 +18,10 @@ static int parseStrViewToInt(const std::string_view str) {
     return val;
 }
 
-std::optional<LineInfo> parseLine(Simd& t_simd, std::string_view line) {
+std::optional<LineInfo> parseLine(Simd& t_simd, const std::string_view line) {
     try {
-        const std::size_t ipAddressStartIndex = 0;
-        const std::size_t ipAddressEndIndex = t_simd.findDelimiter(line, ipAddressStartIndex, Delimiter::Spaces);
-        const auto ipAddress = line.substr(ipAddressStartIndex, ipAddressEndIndex - ipAddressStartIndex);
+        const std::size_t ipAddressEndIndex = t_simd.findDelimiter(line, 0, Delimiter::Spaces);
+        const auto ipAddress = line.substr(0, ipAddressEndIndex);
 
         const std::size_t identProtocolStartIndex = ipAddressEndIndex + 1;
         const std::size_t identProtocolEndIndex = t_simd.findDelimiter(line, identProtocolStartIndex, Delimiter::Spaces);

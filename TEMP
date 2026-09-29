@@ -1,0 +1,3 @@
+Benchmark 1: ./cmake-build-debug/clf -f data/10M -n 5 -r 8000000
+  Time (mean ± σ):      2.355 s ±  0.006 s    [User: 2.109 s, System: 0.245 s]
+  Range (min … max):    2.344 s …  2.364 s    10 runs

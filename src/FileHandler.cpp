@@ -24,7 +24,7 @@ FileHandler::FileHandler(const std::string_view filePath) {
 
     if (sb.st_size == 0) {
         close(fd);
-        return;
+        throw std::runtime_error{"Cannot retrieve stats about a file."};
     }
 
     char *memoryMappedFile = static_cast<char *>(mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
@@ -41,30 +41,29 @@ FileHandler::FileHandler(const std::string_view filePath) {
     mappedFile = std::string_view{memoryMappedFile, static_cast<std::size_t>(sb.st_size)};
 }
 
-std::generator<std::string_view> FileHandler::getLine() const {
+std::string_view FileHandler::getLine(const Simd& t_simd) {
     if (mappedFile.empty()) {
-        co_return;
+        return "";
     }
 
-    std::size_t newLineIndex{};
-    while (newLineIndex < mappedFile.size()) {
-        const std::size_t endLineIndex = this->mappedFile.find_first_of('\n', newLineIndex);
+    while (index < mappedFile.size()) {
+        const auto endLineIndex = t_simd.findNewLine(this->mappedFile, index);
 
-        if (endLineIndex != std::string::npos) {
-            const size_t len = endLineIndex - newLineIndex;
+        if (endLineIndex != std::string::npos) [[unlikely]] {
+            const size_t len = endLineIndex - index;
+            const std::size_t tempIndex{index};
+            index = endLineIndex + 1;
 
-            co_yield mappedFile.substr(newLineIndex, len);
-
-            newLineIndex = endLineIndex + 1;
-        } else {
-            co_yield mappedFile.substr(newLineIndex);
-            break;
+            return mappedFile.substr(tempIndex, len);
         }
+        return mappedFile.substr(index);
     }
+
+    return "";
 }
 
 FileHandler::~FileHandler() {
-    if (mappedFile.empty() == false) {
+    if (not mappedFile.empty()) {
         munmap(const_cast<char *>(mappedFile.data()), mappedFile.size());
     }
 }

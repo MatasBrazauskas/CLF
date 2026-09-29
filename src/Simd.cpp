@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <utility>
+#include <string>
 
 Simd::Simd()
     : Delimiters{{
@@ -77,5 +78,5 @@ std::size_t Simd::findNewLine(const std::string_view t_line, const std::size_t t
         }
     }
 
-    std::unreachable();
+    return std::string::npos;
 }

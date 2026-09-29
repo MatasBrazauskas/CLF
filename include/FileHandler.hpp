@@ -1,7 +1,6 @@
 #pragma once
 
-#include <fstream>
-#include <generator>
+#include <string_view>
 
 #include "Simd.hpp"
 
@@ -9,8 +8,10 @@ class FileHandler {
 public:
     FileHandler() = delete;
     explicit FileHandler(std::string_view filePath);
-    [[nodiscard]] std::generator<std::string_view> getLine() const;
     ~FileHandler();
-private:
+
+    [[nodiscard]] std::string_view getLine(const Simd&);
+
     std::string_view mappedFile;
+    std::size_t index{};
 };

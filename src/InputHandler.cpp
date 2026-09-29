@@ -2,6 +2,9 @@
 
 #include <argp.h>
 #include <string>
+#include <iostream>
+#include <ranges>
+#include <print>
 
 Inputs::Inputs(): fileName{}, n{} {}
 
@@ -60,4 +63,29 @@ std::optional<Inputs> validateInputs(const int argc, char **argv) {
     }
 
     return inputs;
+}
+
+void printInfo(const Stats& stats) {
+    std::println("Total requests: {}.", stats.totalRequestCount);
+    std::println("Total bytes transferred: {}.", stats.totalBytesCount);
+
+    std::println("\nStatus code statistics:");
+    for (const auto& [index, statusCodeCnt] : std::ranges::views::enumerate(stats.statusCodeCount)) {
+        std::println("{}. Status {}xx, {} responses.", index + 1, index + 2, statusCodeCnt);
+    }
+
+    std::println("\nUsers with most bytes transferred:");
+    for (const auto& [index, user] : std::ranges::views::enumerate(stats.mostActiveUsers)) {
+        std::println("{}. Username: {}, requests: {}, bytes transferred: {}.", index + 1, user.name, user.requestCount, user.bytesCount);
+    }
+
+    std::println("\nIP addresses with most bytes transferred:");
+    for (const auto& [index, ip]: std::ranges::views::enumerate(stats.mostActiveIpAddresses)) {
+        std::println("{}. IP address: {}, requests: {}, bytes transferred: {}.", index + 1, ip.name, ip.requestCount, ip.bytesCount);
+    }
+
+    std::println("\nMost packed hours:");
+    for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
+        std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
+    }
 }
