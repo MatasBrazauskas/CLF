@@ -1,14 +1,10 @@
 #include <print>
+#include <string>
 
 #include "FileHandler.hpp"
 #include "LineParser.hpp"
-
-#include <string>
-
 #include "InputHandler.hpp"
 #include "StatHandler.hpp"
-
-using namespace std::string_literals;
 
 int main(const int argc, char** argv) {
     const auto inputsOpt = validateInputs(argc, argv);
