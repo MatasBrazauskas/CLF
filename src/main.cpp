@@ -10,6 +10,7 @@
 using namespace std::string_literals;
 
 constexpr auto CThreadCount{16zu};
+
 Simd fileSimd{};
 
 void workerFunction(StatHandler& t_statHandler, const FileHandler& t_fileHandler, Simd& t_simd, const std::size_t t_index) {
@@ -24,7 +25,20 @@ void workerFunction(StatHandler& t_statHandler, const FileHandler& t_fileHandler
     }
 };
 
+void mergeStats(StatHandler& t_og, StatHandler& t_other, const char* t_chunkStart) {
+    t_og.merge(t_other, t_chunkStart);
+}
+
 int main(const int argc, char** argv) {
+    std::vector<std::thread> firstLine;
+    firstLine.reserve(8);
+
+    std::vector<std::thread> secondLine;
+    secondLine.reserve(4);
+
+    std::vector<std::thread> thirdLine;
+    thirdLine.reserve(2);
+
     const auto inputsOpt = validateInputs(argc, argv);
     if (not inputsOpt.has_value()) {
         return -1;
@@ -53,9 +67,45 @@ int main(const int argc, char** argv) {
         thread.join();
     }
 
-    for (auto i{1}; i < CThreadCount; ++i) {
+    /*for (auto i{1}; i < CThreadCount; ++i) {
         statHandlers[0].merge(statHandlers[i], fileHandler.getChunkStartAddress(i));
+    }*/
+
+    for (auto i{0}; i < 8; i++) {
+        const auto currIndex = i * 2;
+        const auto nextIndex = i * 2 + 1;
+        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+        firstLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
     }
+
+    for (auto i{0}; i < 8; ++i) {
+        firstLine[i].join();
+    }
+
+    for (auto i{0}; i < 4; i++) {
+        const auto currIndex = i * 4;
+        const auto nextIndex = i * 4 + 2;
+        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+        secondLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+    }
+
+    for (auto i{0}; i < 4; ++i) {
+        secondLine[i].join();
+    }
+
+    for (auto i{0}; i < 2; i++) {
+        const auto currIndex = i * 8;
+        const auto nextIndex = i * 8 + 4;
+        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+        thirdLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+    }
+
+    for (auto i{0}; i < 2; ++i) {
+        thirdLine[i].join();
+    }
+
+    const auto temp = fileHandler.getChunkStartAddress(8);
+    statHandlers[0].merge(statHandlers[8], temp);
 
     const auto stats = statHandlers[0].retrieveStats(inputs.n, fileHandler.getChunkStartAddress(0));
     printInfo(stats);
