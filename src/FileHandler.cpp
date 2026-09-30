@@ -1,5 +1,6 @@
 #include "FileHandler.hpp"
 
+#include <algorithm>
 #include <string>
 #include <fcntl.h>
 #include <filesystem>
@@ -9,7 +10,12 @@
 
 #include "StatHandler.hpp"
 
-FileHandler::FileHandler(const std::string_view filePath) {
+static const std::size_t page_size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
+const std::size_t page_mask = ~(page_size - 1);
+
+FileHandler::FileHandler(Simd& t_simd, const std::string_view filePath, const std::size_t t_chunks) {
+    fileChunks.reserve(t_chunks);
+
     const int fd = open(filePath.data(), O_RDONLY);
 
     if (fd == -1) {
@@ -22,48 +28,89 @@ FileHandler::FileHandler(const std::string_view filePath) {
         throw std::runtime_error("Error getting to end of file");
     }
 
-    if (sb.st_size == 0) {
+    mappedFileSize = sb.st_size;
+    if (mappedFileSize == 0) {
         close(fd);
-        throw std::runtime_error{"Cannot retrieve stats about a file."};
+        return;
     }
 
-    char *memoryMappedFile = static_cast<char *>(mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
+    mappedFile = static_cast<char *>(mmap(nullptr, mappedFileSize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
     close(fd);
 
-    if (memoryMappedFile == MAP_FAILED) {
+    if (mappedFile == MAP_FAILED) {
         throw std::runtime_error("Failed to create memory map");
     }
 
-    if (madvise(memoryMappedFile, sb.st_size, MADV_SEQUENTIAL) == -1) {
-        throw std::runtime_error("Failed to create memory map");
+
+    const std::size_t chunkSize = mappedFileSize / t_chunks;
+    std::size_t startOfChunk{};
+    for (std::size_t i{}; i + 1 < t_chunks and startOfChunk < mappedFileSize; ++i) {
+        const auto endOfChunk = std::min(startOfChunk + chunkSize, mappedFileSize);
+        if (endOfChunk == mappedFileSize) {
+            break;
+        }
+
+        const auto chunk = std::string_view{mappedFile + endOfChunk, mappedFileSize - endOfChunk};
+        const std::size_t index = t_simd.findNewLine(chunk);
+        if (index == std::string_view::npos) {
+            break;
+        }
+
+        fileChunks.emplace_back(mappedFile + startOfChunk, index + endOfChunk - startOfChunk);
+        startOfChunk = endOfChunk + index + 1;
     }
 
-    mappedFile = std::string_view{memoryMappedFile, static_cast<std::size_t>(sb.st_size)};
+    fileChunks.emplace_back(mappedFile + startOfChunk, mappedFileSize - startOfChunk);
+    while (fileChunks.size() < t_chunks) {
+        fileChunks.emplace_back();
+    }
+
+    for (auto& chunk : fileChunks) {
+        if (chunk.empty()) {
+            continue;
+        }
+
+        const auto addr = reinterpret_cast<std::uintptr_t>(chunk.data());
+
+        const auto aligned_addr = addr & page_mask;
+        const std::size_t delta = addr - aligned_addr;
+
+        const std::size_t aligned_len = (chunk.size() + delta + page_size - 1) & page_mask;
+
+        if(madvise(reinterpret_cast<void*>(aligned_addr), aligned_len, MADV_SEQUENTIAL) == -1) {
+            throw std::runtime_error("Failed to create memory map");
+        }
+    }
 }
 
-std::string_view FileHandler::getLine(const Simd& t_simd) {
-    if (mappedFile.empty()) {
-        return "";
+std::generator<std::string_view> FileHandler::getLine(const std::size_t t_index) const {
+    if (fileChunks[t_index].empty()) {
+        co_return;
     }
 
-    while (index < mappedFile.size()) {
-        const auto endLineIndex = t_simd.findNewLine(this->mappedFile, index);
+    std::size_t newLineIndex{};
+    while (newLineIndex < fileChunks[t_index].size()) {
+        const std::size_t endLineIndex = fileChunks[t_index].find_first_of('\n', newLineIndex);
 
-        if (endLineIndex != std::string::npos) [[unlikely]] {
-            const size_t len = endLineIndex - index;
-            const std::size_t tempIndex{index};
-            index = endLineIndex + 1;
+        if (endLineIndex != std::string::npos) {
+            const size_t len = endLineIndex - newLineIndex;
 
-            return mappedFile.substr(tempIndex, len);
+            co_yield fileChunks[t_index].substr(newLineIndex, len);
+
+            newLineIndex = endLineIndex + 1;
+        } else {
+            co_yield fileChunks[t_index].substr(newLineIndex);
+            break;
         }
-        return mappedFile.substr(index);
     }
+}
 
-    return "";
+[[nodiscard]] const char* FileHandler::getChunkStartAddress(const std::size_t) const {
+    return fileChunks.front().data();
 }
 
 FileHandler::~FileHandler() {
-    if (not mappedFile.empty()) {
-        munmap(const_cast<char *>(mappedFile.data()), mappedFile.size());
+    if (mappedFile != nullptr) {
+        munmap(mappedFile, mappedFileSize);
     }
 }

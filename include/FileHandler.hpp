@@ -1,17 +1,19 @@
 #pragma once
 
-#include <string_view>
+#include <Simd.hpp>
 
-#include "Simd.hpp"
+#include <generator>
+#include <vector>
 
 class FileHandler {
 public:
     FileHandler() = delete;
-    explicit FileHandler(std::string_view filePath);
+    explicit FileHandler(Simd&, std::string_view, std::size_t);
+    [[nodiscard]] std::generator<std::string_view> getLine(std::size_t) const;
+    [[nodiscard]] const char* getChunkStartAddress(const std::size_t) const;
     ~FileHandler();
-
-    [[nodiscard]] std::string_view getLine(const Simd&);
-
-    std::string_view mappedFile;
-    std::size_t index{};
+private:
+    char *mappedFile{};
+    std::size_t mappedFileSize{};
+    std::vector<std::string_view> fileChunks;
 };

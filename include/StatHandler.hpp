@@ -36,7 +36,10 @@ struct Stats {
 class StatHandler {
 public:
     explicit StatHandler(std::size_t);
+    explicit StatHandler(std::size_t, bool);
+
     void analyzeLine(const LineInfo&, const char*);
+    void merge(const StatHandler&, const char*);
     const Stats& retrieveStats(std::size_t n, const char*);
 private:
     Stats stats;

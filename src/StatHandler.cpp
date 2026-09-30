@@ -17,7 +17,11 @@ static bool sortingPredicate(const GroupInfo& a, const GroupInfo& b) {
 };
 
 StatHandler::StatHandler(const std::size_t t_reserveSize)
-    : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
+    : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {
+}
+
+StatHandler::StatHandler(const std::size_t t_reserveSize, bool)
+: stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
 
 void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) {
     this->stats.totalRequestCount++;
@@ -35,6 +39,19 @@ void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) {
     hourInfo.append(hourDate, t_mmapStart, t_line.byteCount);
 }
 
+void StatHandler::merge(const StatHandler& t_otherStats, const char* t_mmapStart) {
+    for (auto i{0}; i < 4; ++i) {
+        this->stats.statusCodeCount[i] += t_otherStats.stats.statusCodeCount[i];
+    }
+
+    this->stats.totalRequestCount += t_otherStats.stats.totalRequestCount;
+    this->stats.totalBytesCount += t_otherStats.stats.totalBytesCount;
+
+    this->userInfo.merge(t_otherStats.userInfo, t_mmapStart);
+    this->ipAddressInfo.merge(t_otherStats.ipAddressInfo, t_mmapStart);
+    this->hourInfo.merge(t_otherStats.hourInfo, t_mmapStart);
+}
+
 const Stats& StatHandler::retrieveStats(const std::size_t n, const char* t_mmapStart) {
     stats.mostActiveUsers = mostRequestPerData(userInfo, n, t_mmapStart);
     stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n, t_mmapStart);
@@ -49,6 +66,10 @@ std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, 
 
     std::size_t count{};
     for (const auto& entry : map.buckets_) {
+        if (entry.offset == 0) {
+            continue;
+        }
+
         const auto& [offset, hash, comp, bytes] = entry;
 
         if (count < n) {
