@@ -105,8 +105,8 @@ std::generator<std::string_view> FileHandler::getLine(const std::size_t t_index)
     }
 }
 
-[[nodiscard]] const char* FileHandler::getChunkStartAddress(const std::size_t) const {
-    return fileChunks.front().data();
+[[nodiscard]] const char* FileHandler::getChunkStartAddress(const std::size_t t_index) const {
+    return fileChunks[t_index].data();
 }
 
 FileHandler::~FileHandler() {

@@ -15,6 +15,7 @@ Simd fileSimd{};
 
 void workerFunction(StatHandler& t_statHandler, const FileHandler& t_fileHandler, Simd& t_simd, const std::size_t t_index) {
     const auto chunkStartAddress = t_fileHandler.getChunkStartAddress(t_index);
+
     for (const std::string_view line : t_fileHandler.getLine(t_index)) {
         const auto lineInfo = parseLine(t_simd, line);
 
@@ -30,15 +31,6 @@ void mergeStats(StatHandler& t_og, StatHandler& t_other, const char* t_chunkStar
 }
 
 int main(const int argc, char** argv) {
-    std::vector<std::thread> firstLine;
-    firstLine.reserve(8);
-
-    std::vector<std::thread> secondLine;
-    secondLine.reserve(4);
-
-    std::vector<std::thread> thirdLine;
-    thirdLine.reserve(2);
-
     const auto inputsOpt = validateInputs(argc, argv);
     if (not inputsOpt.has_value()) {
         return -1;
@@ -67,41 +59,40 @@ int main(const int argc, char** argv) {
         thread.join();
     }
 
-    /*for (auto i{1}; i < CThreadCount; ++i) {
-        statHandlers[0].merge(statHandlers[i], fileHandler.getChunkStartAddress(i));
-    }*/
+    {
+        std::vector<std::jthread> firstLine;
+        firstLine.reserve(8);
 
-    for (auto i{0}; i < 8; i++) {
-        const auto currIndex = i * 2;
-        const auto nextIndex = i * 2 + 1;
-        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
-        firstLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+        for (auto i{0}; i < 8; i++) {
+            const auto currIndex = i * 2;
+            const auto nextIndex = i * 2 + 1;
+            const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+            firstLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+        }
     }
 
-    for (auto i{0}; i < 8; ++i) {
-        firstLine[i].join();
+    {
+        std::vector<std::jthread> secondLine;
+        secondLine.reserve(4);
+
+        for (auto i{0}; i < 4; i++) {
+            const auto currIndex = i * 4;
+            const auto nextIndex = i * 4 + 2;
+            const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+            secondLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+        }
     }
 
-    for (auto i{0}; i < 4; i++) {
-        const auto currIndex = i * 4;
-        const auto nextIndex = i * 4 + 2;
-        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
-        secondLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
-    }
+    {
+        std::vector<std::jthread> thirdLine;
+        thirdLine.reserve(2);
 
-    for (auto i{0}; i < 4; ++i) {
-        secondLine[i].join();
-    }
-
-    for (auto i{0}; i < 2; i++) {
-        const auto currIndex = i * 8;
-        const auto nextIndex = i * 8 + 4;
-        const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
-        thirdLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
-    }
-
-    for (auto i{0}; i < 2; ++i) {
-        thirdLine[i].join();
+        for (auto i{0}; i < 2; i++) {
+            const auto currIndex = i * 8;
+            const auto nextIndex = i * 8 + 4;
+            const auto chuckStart = fileHandler.getChunkStartAddress(nextIndex);
+            thirdLine.emplace_back(mergeStats, std::ref(statHandlers[currIndex]), std::ref(statHandlers[nextIndex]), chuckStart);
+        }
     }
 
     const auto temp = fileHandler.getChunkStartAddress(8);

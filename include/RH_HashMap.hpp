@@ -32,7 +32,7 @@ public:
 
     bool append(std::string_view, const char*, std::size_t);
     const KeyValue* lookUp(std::string_view) const;
-    void merge(const RH_HashMap&, const char*);
+    void merge(const char*, const RH_HashMap&, const char*);
 
     std::uint32_t modulo(const std::uint32_t t_hash) const noexcept;
     std::vector<KeyValue> buckets_;

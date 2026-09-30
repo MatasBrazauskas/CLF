@@ -49,7 +49,7 @@ const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
     return nullptr;
 }
 
-void RH_HashMap::merge(const RH_HashMap& t_map, const char* t_mmapAddress) {
+void RH_HashMap::merge(const char* t_s, const RH_HashMap& t_map, const char* t_mmapAddress) {
     for (const auto& value : t_map.buckets_) {
         const auto [t_offset, t_hashValue, t_comp, t_bytesCnt] = value;
         const auto [t_keyLength, t_requestCnt] = t_comp;
