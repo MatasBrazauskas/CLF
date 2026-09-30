@@ -39,19 +39,6 @@ void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) {
     hourInfo.append(hourDate, t_mmapStart, t_line.byteCount);
 }
 
-void StatHandler::merge(const StatHandler& t_otherStats, const char* t_mmapStart) {
-    for (auto i{0}; i < 4; ++i) {
-        this->stats.statusCodeCount[i] += t_otherStats.stats.statusCodeCount[i];
-    }
-
-    this->stats.totalRequestCount += t_otherStats.stats.totalRequestCount;
-    this->stats.totalBytesCount += t_otherStats.stats.totalBytesCount;
-
-    this->userInfo.merge(t_otherStats.userInfo, t_mmapStart);
-    this->ipAddressInfo.merge(t_otherStats.ipAddressInfo, t_mmapStart);
-    this->hourInfo.merge(t_otherStats.hourInfo, t_mmapStart);
-}
-
 const Stats& StatHandler::retrieveStats(const std::size_t n, const char* t_mmapStart) {
     stats.mostActiveUsers = mostRequestPerData(userInfo, n, t_mmapStart);
     stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n, t_mmapStart);
