@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 file(GLOB SOURCE_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
 add_executable(clf ${SOURCE_FILES})
-target_compile_options(clf PRIVATE -O3 -flto -fno-omit-frame-pointer -march=native -Wpsabi -mavx2)
+#target_compile_options(clf PRIVATE -03 -flto -fno-omit-frame-pointer -march=native -Wpsabi -mavx2)
+target_compile_options(clf PRIVATE -g -mavx2)
 
 target_include_directories(clf PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")

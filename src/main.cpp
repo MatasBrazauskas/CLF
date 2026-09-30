@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <print>
+#include <unordered_map>
 
 using namespace std::string_literals;
 
@@ -37,26 +38,36 @@ static bool sortingPredicate(const GroupInfo& a, const GroupInfo& b) {
     return a.requestCount > b.requestCount;
 };
 
-void mergeMultipleVector(std::vector<GroupInfo>& t_result, const std::vector<GroupInfo>& t_mergeVector) {
-    for (const auto& entry : t_mergeVector) {
-        if (auto& lastVectorElement = t_result.back(); lastVectorElement.requestCount < entry.requestCount) {
-            lastVectorElement = entry;
-            std::ranges::sort(t_result, sortingPredicate);
-        }
+void mergeVectors(std::unordered_map<std::string_view, GroupInfo>& t_map, const std::vector<GroupInfo>& t_result) {
+    for (const auto& entry : t_result) {
+        const auto& userIt = t_map.try_emplace(entry.name, GroupInfo{entry.name, 0, 0}).first;
+        userIt->second.requestCount += entry.requestCount;
+        userIt->second.bytesCount += entry.bytesCount;
     }
 }
 
+std::vector<GroupInfo> topN(const std::unordered_map<std::string_view, GroupInfo>& t_map) {
+    std::vector<GroupInfo> result;
+    result.reserve(5);
+
+    std::size_t count{};
+    for (const auto &value: t_map | std::views::values) {
+
+        if (count < 5) {
+            result.emplace_back(value);
+            ++count;
+        } else {
+            if (auto& lastVectorElement = result.back(); lastVectorElement.requestCount < value.requestCount) {
+                lastVectorElement = value;
+                std::ranges::sort(result, sortingPredicate);
+            }
+        }
+    }
+
+    return result;
+}
 
 int main(const int argc, char** argv) {
-    std::vector<std::thread> firstLine;
-    firstLine.reserve(8);
-
-    std::vector<std::thread> secondLine;
-    secondLine.reserve(4);
-
-    std::vector<std::thread> thirdLine;
-    thirdLine.reserve(2);
-
     const auto inputsOpt = validateInputs(argc, argv);
     if (not inputsOpt.has_value()) {
         return -1;
@@ -85,26 +96,33 @@ int main(const int argc, char** argv) {
         thread.join();
     }
 
-    std::ranges::sort(stats[0].mostActiveUsers, sortingPredicate);
-    stats[0].mostActiveUsers.resize(5);
-
-    for (auto i{1}; i < CThreadCount; ++i) {
-        mergeMultipleVector(stats[0].mostActiveUsers, stats[i].mostActiveUsers);
+    std::unordered_map<std::string_view, GroupInfo> userInfo;
+    for (auto i{0}; i < CThreadCount; ++i) {
+        mergeVectors(userInfo, stats[i].mostActiveUsers);
     }
 
-    std::ranges::sort(stats[0].mostActiveIpAddresses, sortingPredicate);
-    stats[0].mostActiveIpAddresses.resize(5);
-
-    for (auto i{1}; i < CThreadCount; ++i) {
-        mergeMultipleVector(stats[0].mostActiveIpAddresses, stats[i].mostActiveIpAddresses);
+    std::unordered_map<std::string_view, GroupInfo> ipAddressesInfo;
+    for (auto i{0}; i < CThreadCount; ++i) {
+        mergeVectors(ipAddressesInfo, stats[i].mostActiveIpAddresses);
     }
 
-    std::ranges::sort(stats[0].mostActiveHours, sortingPredicate);
-    stats[0].mostActiveHours.resize(5);
+    std::unordered_map<std::string_view, GroupInfo> hourInfo;
+    for (auto i{0}; i < CThreadCount; ++i) {
+        mergeVectors(hourInfo, stats[i].mostActiveHours);
+    }
 
     for (auto i{1}; i < CThreadCount; ++i) {
-        mergeMultipleVector(stats[0].mostActiveHours, stats[i].mostActiveHours);
+        stats[0].totalBytesCount += stats[i].totalBytesCount;
+        stats[0].totalRequestCount += stats[i].totalRequestCount;
+
+        for (auto j{0}; j < 4; j++) {
+            stats[0].statusCodeCount[j] = stats[i].statusCodeCount[j];
+        }
     }
+
+    stats[0].mostActiveUsers = topN(userInfo);
+    stats[0].mostActiveIpAddresses = topN(ipAddressesInfo);
+    stats[0].mostActiveHours = topN(hourInfo);
 
     printInfo(stats[0]);
 }
