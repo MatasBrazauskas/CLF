@@ -1,0 +1,29 @@
+Total requests: 10000000.
+Total bytes transferred: 69390052714.
+
+Status code statistics:
+1. Status 2xx, 8398558 responses.
+2. Status 3xx, 800488 responses.
+3. Status 4xx, 500343 responses.
+4. Status 5xx, 300611 responses.
+
+Users with most bytes transferred:
+1. Username: user_498025, requests: 1970, bytes transferred: 14214674.
+2. Username: user_337104, requests: 1970, bytes transferred: 13893763.
+3. Username: user_307955, requests: 1970, bytes transferred: 13531208.
+4. Username: user_416548, requests: 1970, bytes transferred: 13493251.
+5. Username: user_190081, requests: 1970, bytes transferred: 12455896.
+
+IP addresses with most bytes transferred:
+1. IP address: 198.18.25.125, requests: 2291, bytes transferred: 15803277.
+2. IP address: 198.19.83.38, requests: 2118, bytes transferred: 14651968.
+3. IP address: 198.19.75.111, requests: 2093, bytes transferred: 14045229.
+4. IP address: 198.18.196.101, requests: 2055, bytes transferred: 14949478.
+5. IP address: 198.19.248.186, requests: 2029, bytes transferred: 14254597.
+
+Most packed hours:
+1. Date: 16/Jun/2025:11, requests: 5389, bytes transferred: 36869288.
+2. Date: 16/Jun/2025:10, requests: 5385, bytes transferred: 37632376.
+3. Date: 04/Jun/2025:11, requests: 5283, bytes transferred: 36400305.
+4. Date: 16/Jun/2025:12, requests: 5224, bytes transferred: 37448971.
+5. Date: 04/Jun/2025:12, requests: 5182, bytes transferred: 36306097.

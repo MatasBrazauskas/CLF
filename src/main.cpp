@@ -19,6 +19,7 @@ Simd fileSimd{};
 
 void workerFunction(StatHandler& t_statHandler, const FileHandler& t_fileHandler, Simd& t_simd, const std::size_t t_index) {
     const auto chunkStartAddress = t_fileHandler.getChunkStartAddress(t_index);
+
     for (const std::string_view line : t_fileHandler.getLine(t_index)) {
         const auto lineInfo = parseLine(t_simd, line);
 
@@ -75,25 +76,22 @@ int main(const int argc, char** argv) {
 
     const auto inputs = inputsOpt.value();
 
-    std::array<Simd, CThreadCount> simd{};
+    std::array<Simd, CThreadCount> simd;
 
     std::vector<StatHandler> statHandlers;
     statHandlers.reserve(CThreadCount);
-    statHandlers.emplace_back(inputs.reserveCount * CThreadCount, true);
-    for (auto i{1}; i < CThreadCount; ++i) {
+    for (auto i{0}; i < CThreadCount; ++i) {
         statHandlers.emplace_back(static_cast<std::size_t>(inputs.reserveCount));
     }
 
     FileHandler fileHandler{fileSimd, inputs.fileName, CThreadCount};
 
-    std::vector<std::thread> workerThreads;
-    workerThreads.reserve(CThreadCount);
-    for (auto i{0}; i < CThreadCount; ++i) {
-        workerThreads.emplace_back(workerFunction, std::ref(statHandlers[i]), std::ref(fileHandler) , std::ref(simd[i]), i);
-    }
-
-    for (auto& thread : workerThreads) {
-        thread.join();
+    {
+        std::vector<std::jthread> workerThreads;
+        workerThreads.reserve(CThreadCount);
+        for (auto i{0}; i < CThreadCount; ++i) {
+            workerThreads.emplace_back(workerFunction, std::ref(statHandlers[i]), std::ref(fileHandler) , std::ref(simd[i]), i);
+        }
     }
 
     std::unordered_map<std::string_view, GroupInfo> userInfo;

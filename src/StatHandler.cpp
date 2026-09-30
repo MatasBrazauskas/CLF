@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <future>
 #include <ranges>
 
 static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, const char*);
@@ -19,9 +18,6 @@ static bool sortingPredicate(const GroupInfo& a, const GroupInfo& b) {
 StatHandler::StatHandler(const std::size_t t_reserveSize)
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {
 }
-
-StatHandler::StatHandler(const std::size_t t_reserveSize, bool)
-: stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
 
 void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) {
     this->stats.totalRequestCount++;
