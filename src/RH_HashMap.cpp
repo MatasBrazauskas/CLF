@@ -12,7 +12,7 @@ bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress,
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
-    for (std::size_t probes{1}; probes <= buckets_.size(); ++probes) {
+    for (std::size_t probes{0}; probes < buckets_.size(); ++probes) {
         if (buckets_[idx].comp.keyLength == 0) {
             buckets_[idx] = KeyValue{t_mmapAddress, t_key.data(), hash, static_cast<std::uint16_t>(t_key.length()), 1, static_cast<std::uint32_t>(t_bytesCnt)};
             return true;
@@ -34,7 +34,7 @@ const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
-    for (std::size_t probes{1}; probes <= buckets_.size(); ++probes) {
+    for (std::size_t probes{0}; probes < buckets_.size(); ++probes) {
         if (buckets_[idx].comp.keyLength == 0) {
             return nullptr;
         }
