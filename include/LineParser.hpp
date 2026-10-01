@@ -15,7 +15,7 @@ struct LineInfo {
     std::string_view date;
     std::string_view clientRequest;
     int statusCode;
-    const int byteCount;
+    int byteCount;
 };
 
-std::optional<LineInfo> parseLine(Simd&, std::string_view);
+std::optional<LineInfo> parseLine(Simd&, std::string_view) noexcept;

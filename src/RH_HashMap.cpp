@@ -2,13 +2,13 @@
 
 #include <bit>
 
-RH_HashMap::RH_HashMap(const std::size_t t_reserveSize): buckets_{std::bit_ceil(t_reserveSize)}, hashFunction_{} {}
+RH_HashMap::RH_HashMap(const std::size_t t_reserveSize) noexcept: buckets_{std::bit_ceil(t_reserveSize)}, hashFunction_{} {}
 
 inline std::uint32_t RH_HashMap::modulo(const std::uint32_t t_hash) const noexcept {
     return t_hash & (buckets_.size() - 1);
 }
 
-bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress, const std::size_t t_bytesCnt) {
+bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress, const std::size_t t_bytesCnt) noexcept {
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 
@@ -30,7 +30,7 @@ bool RH_HashMap::append(const std::string_view t_key, const char* t_mmapAddress,
     return false;
 }
 
-const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const {
+const KeyValue* RH_HashMap::lookUp(const std::string_view t_key) const noexcept {
     const auto hash = static_cast<std::uint32_t>(hashFunction_(t_key));
     auto idx = modulo(hash);
 

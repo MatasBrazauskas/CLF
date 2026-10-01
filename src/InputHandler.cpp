@@ -76,16 +76,16 @@ void printInfo(const Stats& stats) {
 
     std::println("\nUsers with most bytes transferred:");
     for (const auto& [index, user] : std::ranges::views::enumerate(stats.mostActiveUsers)) {
-        std::println("{}. Username: {}, requests: {}, bytes transferred: {}.", index + 1, user.name, user.requestCount, user.bytesCount);
+        std::println("{}. Username: {}, requests: {}, bytes transferred: {}.", index + 1, user.name, user.reqAndBytesCnt.requestCount, user.reqAndBytesCnt.bytesCount);
     }
 
     std::println("\nIP addresses with most bytes transferred:");
     for (const auto& [index, ip]: std::ranges::views::enumerate(stats.mostActiveIpAddresses)) {
-        std::println("{}. IP address: {}, requests: {}, bytes transferred: {}.", index + 1, ip.name, ip.requestCount, ip.bytesCount);
+        std::println("{}. IP address: {}, requests: {}, bytes transferred: {}.", index + 1, ip.name, ip.reqAndBytesCnt.requestCount, ip.reqAndBytesCnt.bytesCount);
     }
 
     std::println("\nMost packed hours:");
     for (const auto& [index, hour] : std::ranges::views::enumerate(stats.mostActiveHours)) {
-        std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.requestCount, hour.bytesCount);
+        std::println("{}. Date: {}, requests: {}, bytes transferred: {}.", index + 1, hour.name, hour.reqAndBytesCnt.requestCount, hour.reqAndBytesCnt.bytesCount);
     }
 }

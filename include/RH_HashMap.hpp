@@ -28,10 +28,10 @@ struct KeyValue {
 class RH_HashMap {
 public:
     RH_HashMap() = delete;
-    explicit RH_HashMap(std::size_t);
+    explicit RH_HashMap(std::size_t) noexcept;
 
-    bool append(std::string_view, const char*, std::size_t);
-    const KeyValue* lookUp(std::string_view) const;
+    bool append(std::string_view, const char*, std::size_t) noexcept;
+    const KeyValue* lookUp(std::string_view) const noexcept;
 
     std::uint32_t modulo(const std::uint32_t t_hash) const noexcept;
     std::vector<KeyValue> buckets_;

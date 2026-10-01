@@ -9,17 +9,30 @@
 #include <vector>
 
 struct ReqAndBytesCnt {
+    ReqAndBytesCnt() noexcept;
+    ReqAndBytesCnt(std::size_t t_reqCnt, std::size_t t_bytesCnt) noexcept;
+
+    auto operator<=>(const ReqAndBytesCnt& t) const noexcept {
+        if (requestCount == t.requestCount) {
+            return t.bytesCount > t.bytesCount;
+        }
+        return t.requestCount > t.requestCount;
+    }
+
     std::size_t requestCount;
     std::size_t bytesCount;
-
-    ReqAndBytesCnt(): requestCount{}, bytesCount{} {};
-    ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt): requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
 };
 
 struct GroupInfo {
+    GroupInfo() = delete;
+    explicit GroupInfo(std::string_view, std::size_t, std::size_t) noexcept;
+
+    auto operator<=>(const GroupInfo& t) const noexcept {
+        return reqAndBytesCnt <=> t.reqAndBytesCnt;
+    }
+
     std::string_view name;
-    std::size_t requestCount;
-    std::size_t bytesCount;
+    ReqAndBytesCnt reqAndBytesCnt;
 };
 
 struct Stats {
@@ -36,8 +49,8 @@ struct Stats {
 class StatHandler {
 public:
     explicit StatHandler(std::size_t);
-    void analyzeLine(const LineInfo&, const char*);
-    const Stats& retrieveStats(std::size_t n, const char*);
+    void analyzeLine(const LineInfo&, const char*) noexcept;
+    const Stats& retrieveStats(std::size_t n, const char*) noexcept;
 private:
     Stats stats;
 

@@ -8,7 +8,7 @@
 
 int main(const int argc, char** argv) {
     const auto inputsOpt = validateInputs(argc, argv);
-    if (not inputsOpt.has_value()) {
+    if (not inputsOpt.has_value()) [[unlikely]] {
         return -1;
     }
 
@@ -21,7 +21,7 @@ int main(const int argc, char** argv) {
     std::string_view line;
     while ((line = fileHandler.getLine(simd)) != "") {
         const auto lineInfo = parseLine(simd, line);
-        if (lineInfo.has_value()) {
+        if (lineInfo.has_value()) [[likely]] {
             statHandler.analyzeLine(lineInfo.value(), fileHandler.mappedFile.data());
         }
     }

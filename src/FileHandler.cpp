@@ -42,24 +42,21 @@ FileHandler::FileHandler(const std::string_view filePath) {
 }
 
 std::string_view FileHandler::getLine(const Simd& t_simd) {
-    if (mappedFile.empty()) {
+    if (mappedFile.empty() or index >= mappedFile.size()) {
         return "";
     }
 
-    while (index < mappedFile.size()) {
-        const auto endLineIndex = t_simd.findNewLine(this->mappedFile, index);
+    const auto endLineIndex = t_simd.findNewLine(this->mappedFile, index);
 
-        if (endLineIndex != std::string::npos) [[unlikely]] {
-            const size_t len = endLineIndex - index;
-            const std::size_t tempIndex{index};
-            index = endLineIndex + 1;
+    if (endLineIndex != std::string::npos) [[likely]] {
+        const size_t len = endLineIndex - index;
+        const std::size_t tempIndex{index};
+        index = endLineIndex + 1;
 
-            return mappedFile.substr(tempIndex, len);
-        }
-        return mappedFile.substr(index);
+        return mappedFile.substr(tempIndex, len);
     }
 
-    return "";
+    return mappedFile.substr(index);
 }
 
 FileHandler::~FileHandler() {

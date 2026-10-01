@@ -14,7 +14,7 @@ Simd::Simd()
 {}
 
 [[gnu::target("avx2")]]
-[[nodiscard]] std::size_t Simd::findDelimiter(const std::string_view t_line, const std::size_t t_offset, const Delimiter t_delimiterOpt) {
+[[nodiscard]] std::size_t Simd::findDelimiter(const std::string_view t_line, const std::size_t t_offset, const Delimiter t_delimiterOpt) noexcept {
     if (currentLineData != t_line.data() || currentLineSize != t_line.size()) {
         delimiterChunks = {0, 0, 0};
         delimiterChunkBases = {0, 0, 0};
@@ -67,7 +67,7 @@ Simd::Simd()
     return std::string_view::npos;
 }
 
-std::size_t Simd::findNewLine(const std::string_view t_line, const std::size_t t_offset) const {
+std::size_t Simd::findNewLine(const std::string_view t_line, const std::size_t t_offset) const noexcept {
     for (std::size_t i{}; i <= t_line.size(); i += 32) {
         const __m256i dataChunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(t_line.data() + i + t_offset));
         const __m256i cmp = _mm256_cmpeq_epi8(dataChunk, Delimiters[3].v);

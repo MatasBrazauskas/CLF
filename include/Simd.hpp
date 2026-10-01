@@ -14,8 +14,8 @@ struct alignas(32) SimdVector {
 class Simd {
 public:
     Simd();
-    [[nodiscard]] std::size_t findDelimiter(std::string_view, std::size_t, Delimiter);
-    [[nodiscard]] std::size_t findNewLine(std::string_view, std::size_t) const;
+    [[nodiscard]] std::size_t findDelimiter(std::string_view, std::size_t, Delimiter) noexcept;
+    [[nodiscard]] std::size_t findNewLine(std::string_view, std::size_t) const noexcept;
 private:
     const std::array<SimdVector, 4> Delimiters;
 
