@@ -38,6 +38,10 @@ FileHandler::FileHandler(const std::string_view filePath) {
         throw std::runtime_error("Failed to create memory map");
     }
 
+    if (madvise(memoryMappedFile, sb.st_size, MADV_WILLNEED) == -1) {
+        throw std::runtime_error("Failed to create memory map");
+    }
+
     mappedFile = std::string_view{memoryMappedFile, static_cast<std::size_t>(sb.st_size)};
 }
 
