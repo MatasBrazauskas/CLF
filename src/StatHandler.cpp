@@ -24,7 +24,7 @@ static bool cmp(const KeyValue& l, const KeyValue& r) noexcept {
 
 Stats::Stats() noexcept: statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
 
-StatHandler::StatHandler(const std::size_t t_reserveSize)
+StatHandler::StatHandler(const std::size_t t_reserveSize) noexcept
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}
 
 void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) noexcept {
@@ -33,10 +33,7 @@ void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) n
     this->stats.totalRequestCount++;
     this->stats.totalBytesCount += t_line.byteCount;
 
-    //const int arrayIndex = t_line.statusCode / 100;
-    //if (arrayIndex >= 2 and arrayIndex <= 5) {
-        this->stats.statusCodeCount[t_line.statusCode / 100 - 2]++;
-    //}
+    this->stats.statusCodeCount[t_line.statusCode / 100 - 2]++;
 
     userInfo.append(t_line.userId, t_mmapStart, t_line.byteCount);
     ipAddressInfo.append(t_line.ipAddress, t_mmapStart, t_line.byteCount);

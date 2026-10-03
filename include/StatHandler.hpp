@@ -48,7 +48,7 @@ struct Stats {
 
 class StatHandler {
 public:
-    explicit StatHandler(std::size_t);
+    explicit StatHandler(std::size_t) noexcept;
     void analyzeLine(const LineInfo&, const char*) noexcept;
     const Stats& retrieveStats(std::size_t n, const char*) noexcept;
 private:
