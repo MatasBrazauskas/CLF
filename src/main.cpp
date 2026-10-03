@@ -19,10 +19,11 @@ int main(const int argc, char** argv) {
     Simd simd;
 
     std::string_view line;
-    while ((line = fileHandler.getLine(simd)) != "") {
+    while ((line = fileHandler.getLine()) != emptyString) {
         const auto lineInfo = parseLine(simd, line);
         if (lineInfo.has_value()) [[likely]] {
             statHandler.analyzeLine(lineInfo.value(), fileHandler.mappedFile.data());
+            fileHandler.addOffset(lineInfo.value().offset);
         }
     }
 

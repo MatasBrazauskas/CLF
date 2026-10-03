@@ -1,7 +1,7 @@
 #include "LineParser.hpp"
 
-LineInfo::LineInfo(const std::string_view t_ipAddress, const std::string_view t_identProtocol, const std::string_view t_userId, const std::string_view t_date, const std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount)
-    : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount} {}
+LineInfo::LineInfo(const std::string_view t_ipAddress, const std::string_view t_identProtocol, const std::string_view t_userId, const std::string_view t_date, const std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount, const int t_offset) noexcept
+    : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount}, offset{t_offset} {}
 
 static int parseStrViewToInt(const std::string_view str) {
     int val{};
@@ -38,8 +38,9 @@ std::optional<LineInfo> parseLine(Simd& t_simd, const std::string_view line) noe
     const int statusCode = parseStrViewToInt(statusCodeStr);
 
     const std::size_t byteCountStartIndex = statusCodeEndIndex + 1;
-    const auto byteCountStr = line.substr(byteCountStartIndex);
+    const auto offset = t_simd.findNewLine(line, byteCountStartIndex);
+    const auto byteCountStr = line.substr(byteCountStartIndex, offset - byteCountStartIndex);
     const int byteCount = parseStrViewToInt(byteCountStr);
 
-    return LineInfo{ipAddress, identProtocol, userId, date, clientRequest, statusCode, byteCount};
+    return LineInfo{ipAddress, identProtocol, userId, date, clientRequest, statusCode, byteCount, static_cast<int>(offset + 1)};
 }

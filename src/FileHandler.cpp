@@ -1,13 +1,12 @@
 #include "FileHandler.hpp"
 
 #include <string>
+#include <print>
 #include <fcntl.h>
 #include <filesystem>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-
-#include "StatHandler.hpp"
 
 FileHandler::FileHandler(const std::string_view filePath) {
     const int fd = open(filePath.data(), O_RDONLY);
@@ -45,25 +44,19 @@ FileHandler::FileHandler(const std::string_view filePath) {
     mappedFile = std::string_view{memoryMappedFile, static_cast<std::size_t>(sb.st_size)};
 }
 
-std::string_view FileHandler::getLine(const Simd& t_simd) {
-    if (mappedFile.empty() or index >= mappedFile.size()) {
-        return "";
-    }
-
-    const auto endLineIndex = t_simd.findNewLine(this->mappedFile, index);
-
-    if (endLineIndex != std::string::npos) [[likely]] {
-        const size_t len = endLineIndex - index;
-        const std::size_t tempIndex{index};
-        index = endLineIndex + 1;
-
-        return mappedFile.substr(tempIndex, len);
+std::string_view FileHandler::getLine() const noexcept {
+    if (index >= mappedFile.size()) {
+        return emptyString;
     }
 
     return mappedFile.substr(index);
 }
 
-FileHandler::~FileHandler() {
+void FileHandler::addOffset(const std::size_t t_offset) noexcept {
+    index += t_offset;
+}
+
+FileHandler::~FileHandler() noexcept {
     if (not mappedFile.empty()) {
         munmap(const_cast<char *>(mappedFile.data()), mappedFile.size());
     }

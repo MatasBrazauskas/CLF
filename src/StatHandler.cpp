@@ -22,7 +22,7 @@ static bool cmp(const KeyValue& l, const KeyValue& r) noexcept {
 };
 
 
-Stats::Stats(): statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
+Stats::Stats() noexcept: statusCodeCount{{0,0,0,0}}, totalRequestCount{}, totalBytesCount{} {}
 
 StatHandler::StatHandler(const std::size_t t_reserveSize)
     : stats{}, userInfo{t_reserveSize}, ipAddressInfo{t_reserveSize}, hourInfo {t_reserveSize} {}

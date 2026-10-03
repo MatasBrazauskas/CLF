@@ -6,7 +6,7 @@
 #include <ranges>
 #include <print>
 
-Inputs::Inputs(): fileName{}, n{} {}
+Inputs::Inputs(): fileName{}, n{}, reserveCount{} {}
 
 static char doc[] = "V1";
 static char args_doc[] = "[ARG1...]";
@@ -58,14 +58,14 @@ std::optional<Inputs> validateInputs(const int argc, char **argv) {
         return std::nullopt;
     }
 
-    if (inputs.reserveCount <= 0) {
-        inputs.reserveCount = 5000;
+    if (inputs.reserveCount == 0) {
+        return std::nullopt;
     }
 
     return inputs;
 }
 
-void printInfo(const Stats& stats) {
+void printInfo(const Stats& stats) noexcept {
     std::println("Total requests: {}.", stats.totalRequestCount);
     std::println("Total bytes transferred: {}.", stats.totalBytesCount);
 

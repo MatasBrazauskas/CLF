@@ -17,4 +17,4 @@ struct Inputs {
 };
 
 std::optional<Inputs> validateInputs(int argc, char **argv);
-void printInfo(const Stats&);
+void printInfo(const Stats&) noexcept;

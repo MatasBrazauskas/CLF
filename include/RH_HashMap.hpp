@@ -6,7 +6,7 @@
 
 struct Compressed {
     Compressed() = default;
-    Compressed(const int t_keyLength, const int t_requestCnt)
+    Compressed(const int t_keyLength, const int t_requestCnt) noexcept
         : keyLength{static_cast<std::uint16_t>(t_keyLength)}, requestCnt{static_cast<std::uint16_t>(t_requestCnt)} {}
 
     std::uint16_t keyLength;
@@ -16,7 +16,7 @@ struct Compressed {
 struct KeyValue {
     KeyValue() = default;
     KeyValue(const char* t_mmapStart, const char* t_mmapEnd, const std::uint32_t t_hashValue, const std::uint16_t t_keyLength,
-        const std::uint16_t t_requestCnt, const std::uint32_t t_bytesCnt)
+        const std::uint16_t t_requestCnt, const std::uint32_t t_bytesCnt) noexcept
         :offset{static_cast<std::uint32_t>(t_mmapEnd - t_mmapStart)}, hashValue{t_hashValue}, comp{t_keyLength, t_requestCnt}, bytesCnt{t_bytesCnt} {}
 
     std::uint32_t offset;
@@ -31,9 +31,10 @@ public:
     explicit RH_HashMap(std::size_t) noexcept;
 
     bool append(std::string_view, const char*, std::size_t) noexcept;
-    const KeyValue* lookUp(std::string_view) const noexcept;
+    [[nodiscard]] const KeyValue* lookUp(std::string_view) const noexcept;
 
-    std::uint32_t modulo(const std::uint32_t t_hash) const noexcept;
+    [[nodiscard]] std::uint32_t modulo(std::uint32_t) const noexcept;
+
     std::vector<KeyValue> buckets_;
     std::hash<std::string_view> hashFunction_;
 };

@@ -36,7 +36,7 @@ struct GroupInfo {
 };
 
 struct Stats {
-    Stats();
+    Stats() noexcept;
 
     std::vector<GroupInfo> mostActiveUsers;
     std::vector<GroupInfo> mostActiveIpAddresses;
