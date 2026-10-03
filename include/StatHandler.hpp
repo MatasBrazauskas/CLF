@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LineParser.hpp"
-#include <RH_HashMap.hpp>
+#include <OpenHashMap.hpp>
 
 #include <cstddef>
 #include <utility>
@@ -19,8 +19,8 @@ struct ReqAndBytesCnt {
         return t.requestCount > t.requestCount;
     }
 
-    std::size_t requestCount;
-    std::size_t bytesCount;
+    std::uint32_t requestCount;
+    std::uint32_t bytesCount;
 };
 
 struct GroupInfo {
@@ -54,7 +54,7 @@ public:
 private:
     Stats stats;
 
-    RH_HashMap userInfo;
-    RH_HashMap ipAddressInfo;
-    RH_HashMap hourInfo;
+    OpenHashMap userInfo;
+    OpenHashMap ipAddressInfo;
+    OpenHashMap hourInfo;
 };

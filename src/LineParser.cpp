@@ -3,7 +3,7 @@
 LineInfo::LineInfo(const std::string_view t_ipAddress, const std::string_view t_identProtocol, const std::string_view t_userId, const std::string_view t_date, const std::string_view t_clientRequest, const int t_statusCode, const int t_byteCount, const int t_offset) noexcept
     : ipAddress{t_ipAddress}, identProtocol{t_identProtocol}, userId{t_userId}, date{t_date}, clientRequest{t_clientRequest}, statusCode{t_statusCode}, byteCount{t_byteCount}, offset{t_offset} {}
 
-static int parseStrViewToInt(const std::string_view str) {
+static int parseStrViewToInt(const std::string_view str) noexcept {
     int val{};
     for (int i{}; i < str.length(); ++i) {
         val = val * 10 + (str[i] - '0');

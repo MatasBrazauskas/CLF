@@ -6,12 +6,12 @@
 
 ReqAndBytesCnt::ReqAndBytesCnt() noexcept: requestCount{}, bytesCount{} {}
 
-ReqAndBytesCnt::ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt) noexcept: requestCount{t_reqCnt}, bytesCount{t_bytesCnt} {}
+ReqAndBytesCnt::ReqAndBytesCnt(const std::size_t t_reqCnt, const std::size_t t_bytesCnt) noexcept: requestCount{static_cast<std::uint32_t>(t_reqCnt)}, bytesCount{static_cast<std::uint32_t>(t_bytesCnt)} {}
 
 GroupInfo::GroupInfo(const std::string_view t_name, const std::size_t t_reqCnt, const std::size_t t_bytesCnt) noexcept
     :name{t_name}, reqAndBytesCnt{t_reqCnt, t_bytesCnt} {}
 
-static std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, const char*) noexcept;
+static std::vector<GroupInfo> mostRequestPerData(OpenHashMap& map, const std::size_t n, const char*) noexcept;
 
 static bool cmp(const KeyValue& l, const KeyValue& r) noexcept {
     if (l.comp.requestCnt == r.comp.requestCnt) {
@@ -43,6 +43,8 @@ void StatHandler::analyzeLine(const LineInfo& t_line, const char* t_mmapStart) n
 }
 
 const Stats& StatHandler::retrieveStats(const std::size_t n, const char* t_mmapStart) noexcept {
+    [[assume(t_mmapStart != nullptr)]];
+
     stats.mostActiveUsers = mostRequestPerData(userInfo, n, t_mmapStart);
     stats.mostActiveIpAddresses = mostRequestPerData(ipAddressInfo, n, t_mmapStart);
     stats.mostActiveHours = mostRequestPerData(hourInfo, n, t_mmapStart);
@@ -50,7 +52,7 @@ const Stats& StatHandler::retrieveStats(const std::size_t n, const char* t_mmapS
     return stats;
 }
 
-std::vector<GroupInfo> mostRequestPerData(RH_HashMap& map, const std::size_t n, const char* t_mmapStart) noexcept {
+std::vector<GroupInfo> mostRequestPerData(OpenHashMap& map, const std::size_t n, const char* t_mmapStart) noexcept {
     [[assume(t_mmapStart != nullptr)]];
 
     std::ranges::partial_sort(map.buckets_, map.buckets_.begin() + n, cmp);

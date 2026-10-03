@@ -20,10 +20,11 @@ int main(const int argc, char** argv) {
 
     std::string_view line;
     while ((line = fileHandler.getLine()) != emptyString) {
-        const auto lineInfo = parseLine(simd, line);
-        if (lineInfo.has_value()) [[likely]] {
-            statHandler.analyzeLine(lineInfo.value(), fileHandler.mappedFile.data());
-            fileHandler.addOffset(lineInfo.value().offset);
+        const auto lineOpt = parseLine(simd, line);
+        if (lineOpt.has_value()) [[likely]] {
+            const auto lineInfo = lineOpt.value();
+            statHandler.analyzeLine(lineInfo, fileHandler.mappedFile.data());
+            fileHandler.addOffset(lineInfo.offset);
         }
     }
 

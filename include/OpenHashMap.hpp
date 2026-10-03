@@ -25,10 +25,10 @@ struct KeyValue {
     std::uint32_t bytesCnt;
 };
 
-class RH_HashMap {
+class OpenHashMap {
 public:
-    RH_HashMap() = delete;
-    explicit RH_HashMap(std::size_t) noexcept;
+    OpenHashMap() = delete;
+    explicit OpenHashMap(std::size_t) noexcept;
 
     bool append(std::string_view, const char*, std::size_t) noexcept;
     [[nodiscard]] const KeyValue* lookUp(std::string_view) const noexcept;
